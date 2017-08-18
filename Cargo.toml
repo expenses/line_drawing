@@ -1,0 +1,13 @@
+[package]
+name = "line_drawing"
+version = "0.1.0"
+authors = ["Expenses <expenses@airmail.cc>"]
+description = "A collection of line-drawing algorithms for use in graphics and video games."
+license = "MIT"
+categories = ["algorithms", "games"]
+keywords = ["line", "drawing", "bresenham", "sight" "game"]
+readme = "README.md"
+
+
+[dependencies]
+bresenham = "*"
