@@ -3,20 +3,26 @@
 //! Currently implemented:
 //!
 //! * [`bresenham`] through [`bresenham-rs`].
+//! * The [mid-point line drawing algorithm].
 //! * [`walk_grid`] and [`supercover`] implemented from [this article by Red Blob Games][article].
 //!
 //! [`bresenham`]: fn.bresenham.html
 //! [`bresenham-rs`]: https://crates.io/crates/bresenham
+//! [mid-point line drawing algorithm]: http://www.mat.univie.ac.at/~kriegl/Skripten/CG/node25.html
 //! [`walk_grid`]: fn.walk_grid.html
 //! [`supercover`]: fn.supercover.html
 //! [article]: http://www.redblobgames.com/grids/line-drawing.html
 
 extern crate bresenham;
 
-type Point = (isize, isize);
+mod midpoint;
+
+pub use midpoint::{midpoint, sorted_midpoint};
+
+type Point<T> = (T, T);
 
 // Sort two points and return whether they were reordered or not
-fn sort(a: Point, b: Point) -> (Point, Point, bool) {
+fn sort<T: PartialOrd>(a: Point<T>, b: Point<T>) -> (Point<T>, Point<T>, bool) {
     if a.1 > b.1 {
         (b, a, true)
     } else {
@@ -25,7 +31,7 @@ fn sort(a: Point, b: Point) -> (Point, Point, bool) {
 }
 
 // Reverse an slice of points into a vec
-fn reverse(points: &[Point]) -> Vec<Point> {
+fn reverse(points: &[Point<isize>]) -> Vec<Point<isize>> {
     points.iter().rev().cloned().collect()
 }
 
@@ -39,33 +45,25 @@ fn reverse(points: &[Point]) -> Vec<Point> {
 ///
 /// Example: 
 ///
-/// ```rust
+/// ```
 /// extern crate line_drawing;
-/// use line_drawing::walk_grid; 
+/// use line_drawing::walk_grid;
 ///
 /// fn main() {
 ///     for (x, y) in walk_grid((0, 0), (5, 3)) {
-///         println!("{}, {}", x, y);
+///         print!("({}, {}), ", x, y);
 ///     }
 /// }
 /// ```
-/// Should print out:
 ///
 /// ```text
-/// 0, 0
-/// 1, 0
-/// 1, 1
-/// 2, 1
-/// 2, 2
-/// 3, 2
-/// 4, 2
-/// 4, 3
-/// 5, 3
+/// (0, 0), (1, 0), (1, 1), (2, 1), (2, 2), (3, 2), (4, 2), (4, 3), (5, 3),
 /// ```
+///
 /// [section]: http://www.redblobgames.com/grids/line-drawing.html#org3c085ed
 /// [article]: http://www.redblobgames.com/grids/line-drawing.html
 /// [`sorted_walk_grid`]: fn.sorted_walk_grid.html
-pub fn walk_grid(mut start: Point, end: Point) -> Vec<Point> {
+pub fn walk_grid(mut start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
     // Set up the points
     let mut points = Vec::new();
     points.push(start);
@@ -106,30 +104,25 @@ pub fn walk_grid(mut start: Point, end: Point) -> Vec<Point> {
 ///
 /// Example: 
 ///
-/// ```rust
+/// ```
 /// extern crate line_drawing;
 /// use line_drawing::supercover; 
 ///
 /// fn main() {
 ///     for (x, y) in supercover((0, 0), (5, 5)) {
-///         println!("{}, {}", x, y);
+///         print!("({}, {}), ", x, y);
 ///     }
 /// }
 /// ```
-/// Should print out:
 ///
 /// ```text
-/// 0, 0
-/// 1, 1
-/// 2, 2
-/// 3, 3
-/// 4, 4
-/// 5, 5
+/// (0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5),
 /// ```
+///
 /// [`walk_grid`]: fn.walk_grid.html
 /// [section]: http://www.redblobgames.com/grids/line-drawing.html#org1da485d
 /// [article]: http://www.redblobgames.com/grids/line-drawing.html
-pub fn supercover(mut start: Point, end: Point) -> Vec<Point> {
+pub fn supercover(mut start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
     let mut points = Vec::new();
     points.push(start);
     
@@ -166,32 +159,28 @@ pub fn supercover(mut start: Point, end: Point) -> Vec<Point> {
 /// A simple wrapper around [`bresenham-rs`] that includes the end point.
 ///
 /// If all you need is this function then just using [`bresenham-rs`] would probably be easier.
+/// See [`sorted_bresenham`] for a sorted version.
 ///
 /// Example: 
 ///
-/// ```rust
+/// ```
 /// extern crate line_drawing;
 /// use line_drawing::bresenham; 
 ///
 /// fn main() {
 ///     for (x, y) in bresenham((0, 0), (5, 6)) {
-///         println!("{}, {}", x, y);
+///         print!("({}, {}), ", x, y);
 ///     }
 /// }
 /// ```
-/// Should print out:
 ///
 /// ```text
-/// 0, 0
-/// 0, 1
-/// 1, 2
-/// 2, 3
-/// 3, 4
-/// 4, 5
-/// 5, 6
+/// (0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6),
 /// ```
+///
 /// [`bresenham-rs`]: https://crates.io/crates/bresenham
-pub fn bresenham(start: Point, end: Point) -> Vec<Point> {
+/// [`sorted_bresenham`]: fn.sorted_bresenham.html
+pub fn bresenham(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
     // Use the bresenham iterator to collect up the points
     let mut points: Vec<_> = bresenham::Bresenham::new(start, end).collect();
     // Add the last point
@@ -204,7 +193,7 @@ pub fn bresenham(start: Point, end: Point) -> Vec<Point> {
 /// Sorts the points to ensure that if the start and end points were swapped the line would be the
 /// same.
 /// [`walk_grid`]: fn.walk_grid.html
-pub fn sorted_walk_grid(start: Point, end: Point) -> Vec<Point> {
+pub fn sorted_walk_grid(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
     let (start, end, reordered) = sort(start, end);
     let points = walk_grid(start, end);
 
@@ -217,7 +206,7 @@ pub fn sorted_walk_grid(start: Point, end: Point) -> Vec<Point> {
 
 /// A sorted version of [`bresenham`].
 /// [`bresenham`]: fn.bresenham.html
-pub fn sorted_bresenham(start: Point, end: Point) -> Vec<Point> {
+pub fn sorted_bresenham(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
     let (start, end, reordered) = sort(start, end);
     let points = bresenham(start, end);
 
