@@ -1,4 +1,4 @@
-use {Point, reverse};
+use {Point, sort_x, reverse};
 
 use std::mem::swap;
 
@@ -35,7 +35,8 @@ fn add_points(points: &mut Points, steep: bool, x: isize, y: isize, v_a: f32, v_
 /// This algorithm works based on floating-points and returns an extra variable for how much a
 /// a point is covered, which is useful for anti-aliasing.
 /// 
-/// This algorithm should always be symetrical.
+/// Note that due to the implementation, the returned line will always go from left to right. See
+/// [`sorted_xiaolin_wu`] for a version that reverses the resulting line in this case.
 /// 
 /// Example:
 /// 
@@ -55,6 +56,7 @@ fn add_points(points: &mut Points, steep: bool, x: isize, y: isize, v_a: f32, v_
 /// ```
 /// 
 /// [Xiaolin Wu's line algorithm]: https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm
+/// [`sorted_xiaolin_wu`]: fn.sorted_xiaolin_wu.html
 pub fn xiaolin_wu(mut start: Point<f32>, mut end: Point<f32>) -> Points {
     // Change the points around depending on whether the line is steep
 
@@ -67,9 +69,7 @@ pub fn xiaolin_wu(mut start: Point<f32>, mut end: Point<f32>) -> Points {
 
     // Calculate whether to flip the points around
 
-    let flipped = start.0 > end.0;
-
-    if flipped {
+    if start.0 > end.0 {
         swap(&mut start, &mut end);
     }
 
@@ -121,9 +121,17 @@ pub fn xiaolin_wu(mut start: Point<f32>, mut end: Point<f32>) -> Points {
         rfpart(end_y) * gap_x, fpart(end_y) * gap_x
     );
 
-    // If the points were flipped, flip them back
+    points
+}
 
-    if !flipped {
+/// Like [`xiaolin_wu`] but reverses the resulting line if the start and end points get reordered.
+/// [`xiaolin_wu`]: fn.xiaolin_wu.html
+pub fn sorted_xiaolin_wu(start: Point<f32>, end: Point<f32>) -> Points {
+    let (start, end, reordered) = sort_x(start, end);
+
+    let points = xiaolin_wu(start, end);
+
+    if !reordered {
         points
     } else {
         reverse(&points)
@@ -137,8 +145,17 @@ fn test_xiaolin_wu() {
         [((0, 0), 0.5), ((1, 1), 1.0), ((2, 2), 1.0), ((3, 3), 1.0), ((4, 4), 1.0), ((5, 5), 1.0), ((6, 6), 0.5)]
     );
 
+    // The algorithm reorders the points to be left-to-right
+
     assert_eq!(
         xiaolin_wu((340.5, 290.77), (110.0, 170.0)),
-        reverse(&xiaolin_wu((110.0, 170.0), (340.5, 290.77)))
+        xiaolin_wu((110.0, 170.0), (340.5, 290.77))
+    );
+
+    // sorted_xiaolin_wu should prevent this
+
+    assert_eq!(
+        sorted_xiaolin_wu((340.5, 290.77), (110.0, 170.0)),
+        reverse(&sorted_xiaolin_wu((110.0, 170.0), (340.5, 290.77)))
     );
 }

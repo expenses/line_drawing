@@ -1,8 +1,8 @@
 extern crate line_drawing;
-use line_drawing::midpoint; 
+use line_drawing::Midpoint; 
 
 fn main() {
-    for (x, y) in midpoint((0.2, 0.02), (2.8, 7.7), true) {
+    for (x, y) in Midpoint::new((0.2, 0.02), (2.8, 7.7), true) {
         print!("({}, {}), ", x, y);
     }
 }
