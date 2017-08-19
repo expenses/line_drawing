@@ -4,11 +4,13 @@
 //!
 //! * [`bresenham`] through [`bresenham-rs`].
 //! * The [mid-point line drawing algorithm].
+//! * [Xiaolin Wu's line algorithm].
 //! * [`walk_grid`] and [`supercover`] implemented from [this article by Red Blob Games][article].
 //!
 //! [`bresenham`]: fn.bresenham.html
 //! [`bresenham-rs`]: https://crates.io/crates/bresenham
 //! [mid-point line drawing algorithm]: http://www.mat.univie.ac.at/~kriegl/Skripten/CG/node25.html
+//! [Xiaolin Wu's line algorithm]: https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm
 //! [`walk_grid`]: fn.walk_grid.html
 //! [`supercover`]: fn.supercover.html
 //! [article]: http://www.redblobgames.com/grids/line-drawing.html
@@ -16,8 +18,10 @@
 extern crate bresenham;
 
 mod midpoint;
+mod xiaolin_wu;
 
 pub use midpoint::{midpoint, sorted_midpoint};
+pub use xiaolin_wu::xiaolin_wu;
 
 type Point<T> = (T, T);
 
@@ -31,7 +35,7 @@ fn sort<T: PartialOrd>(a: Point<T>, b: Point<T>) -> (Point<T>, Point<T>, bool) {
 }
 
 // Reverse an slice of points into a vec
-fn reverse(points: &[Point<isize>]) -> Vec<Point<isize>> {
+fn reverse<T: Clone>(points: &[T]) -> Vec<T> {
     points.iter().rev().cloned().collect()
 }
 
