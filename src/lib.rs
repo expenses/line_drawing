@@ -20,12 +20,16 @@ extern crate bresenham;
 mod midpoint;
 mod xiaolin_wu;
 mod grid_walking;
+mod fuzzing;
+mod octant;
 
-pub use midpoint::{Midpoint, midpoint, sorted_midpoint};
-pub use xiaolin_wu::{xiaolin_wu, sorted_xiaolin_wu};
-pub use grid_walking::{WalkGrid, Supercover, walk_grid, supercover, sorted_walk_grid};
+pub use midpoint::*;
+pub use xiaolin_wu::*;
+pub use grid_walking::*;
+pub use octant::*;
 
-type Point<T> = (T, T);
+/// A point in 2D space
+pub type Point<T> = (T, T);
 
 // Sort two points and return whether they were reordered or not
 
@@ -84,7 +88,7 @@ pub fn bresenham(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
 
 /// Like [`bresenham`] but sorts the points before hand to ensure that the line is symmetrical.
 /// [`bresenham`]: fn.bresenham.html
-pub fn sorted_bresenham(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
+pub fn bresenham_sorted(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
     let (start, end, reordered) = sort_y(start, end);
     let points = bresenham(start, end);
 
@@ -93,16 +97,4 @@ pub fn sorted_bresenham(start: Point<isize>, end: Point<isize>) -> Vec<Point<isi
     } else {
         reverse(&points)
     }
-}
-
-#[test]
-fn bresenham_tests() {
-    // Bresenham is not symetrical by default
-    assert_ne!(bresenham((0, 0), (5, 3)), reverse(&bresenham((5, 3), (0, 0))));
-
-    // But should be if using the sorted version
-    assert_eq!(
-        sorted_bresenham((0, 0), (5, 3)),
-        reverse(&sorted_bresenham((5, 3), (0, 0)))
-    );
 }

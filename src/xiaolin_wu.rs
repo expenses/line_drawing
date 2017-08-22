@@ -2,50 +2,23 @@ use {Point, sort_x, reverse};
 
 use std::mem::swap;
 
-fn fpart(x: f32) -> f32 {
-    x - x.floor()
-}
-
-fn rfpart(x: f32) -> f32 {
-    1.0 - fpart(x)
-}
-
-type Points = Vec<(Point<isize>, f32)>;
-
-// Add a point to the vec if it's value is over 0
-fn add_point(points: &mut Points, point: Point<isize>, value: f32) {
-    if value > 0.0 {
-        points.push((point, value));
-    }
-}
-
-// Add a set of points depending on whether the line is steep or not
-fn add_points(points: &mut Points, steep: bool, x: isize, y: isize, v_a: f32, v_b: f32) {
-    if steep {
-        add_point(points, (y, x), v_a);
-        add_point(points, (y + 1, x), v_b);
-    } else {
-        add_point(points, (x, y), v_a);
-        add_point(points, (x, y + 1), v_b);
-    }
-}
-
 /// An implementation of [Xiaolin Wu's line algorithm].
 ///
 /// This algorithm works based on floating-points and returns an extra variable for how much a
 /// a point is covered, which is useful for anti-aliasing.
 /// 
-/// Note that due to the implementation, the returned line will always go from left to right. See
-/// [`sorted_xiaolin_wu`] for a version that reverses the resulting line in this case.
+/// Note that due to the implementation, the returned line will always go from left to right. Also
+/// see [`xiaolin_wu`] and [`xiaolin_wu_sorted`] for a version that reverses the resulting line in
+/// this case.
 /// 
 /// Example:
 /// 
 /// ```
 /// extern crate line_drawing;
-/// use line_drawing::xiaolin_wu; 
+/// use line_drawing::XiaolinWu; 
 ///
 /// fn main() {
-///     for ((x, y), value) in xiaolin_wu((0.0, 0.0), (3.0, 6.0)) {
+///     for ((x, y), value) in XiaolinWu::new((0.0, 0.0), (3.0, 6.0)) {
 ///         print!("(({}, {}), {}), ", x, y, value);
 ///     }
 /// }
@@ -56,77 +29,104 @@ fn add_points(points: &mut Points, steep: bool, x: isize, y: isize, v_a: f32, v_
 /// ```
 /// 
 /// [Xiaolin Wu's line algorithm]: https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm
+/// [`xiaolin_wu`]: fn.xiaolin_wu.html
 /// [`sorted_xiaolin_wu`]: fn.sorted_xiaolin_wu.html
-pub fn xiaolin_wu(mut start: Point<f32>, mut end: Point<f32>) -> Points {
-    // Change the points around depending on whether the line is steep
+pub struct XiaolinWu {
+    steep: bool,
+    gradient: f32,
+    x: isize,
+    y: f32,
+    end_x: isize,
+    lower: bool
+}
 
-    let steep = (end.1 - start.1).abs() > (end.0 - start.0).abs();
+impl XiaolinWu {
+    #[inline]
+    pub fn new(mut start: Point<f32>, mut end: Point<f32>) -> XiaolinWu {
+        let steep = (end.1 - start.1).abs() > (end.0 - start.0).abs();
 
-    if steep {
-        start = (start.1, start.0);
-        end = (end.1, end.0);
-    }
+        if steep {
+            start = (start.1, start.0);
+            end = (end.1, end.0);
+        }
 
-    // Calculate whether to flip the points around
+        if start.0 > end.0 {
+            swap(&mut start, &mut end);
+        }
 
-    if start.0 > end.0 {
-        swap(&mut start, &mut end);
-    }
-
-    // Calculate the gradient
-
-    let mut gradient = (end.1 - start.1) / (end.0 - start.0);
+        let mut gradient = (end.1 - start.1) / (end.0 - start.0);
     
-    if gradient == 0.0 {
-        gradient = 1.0;
+        if gradient == 0.0 {
+            gradient = 1.0;
+        }
+
+        XiaolinWu {
+            steep, gradient,
+            x: start.0.round() as isize,
+            y: start.1,
+            end_x: end.0.round() as isize,
+            lower: false
+        }
     }
+}
 
-    let (start_x, end_x) = (start.0.round(), end.0.round());
-    let (start_x_i, end_x_i) = (start_x as isize, end_x as isize);
+impl Iterator for XiaolinWu {
+    type Item = (Point<isize>, f32);
 
-    let mut points = Vec::new();
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.x <= self.end_x {
+            // get the fractional part of y
+            let fpart = self.y - self.y.floor();
+            
+            // Calculate the integer value of y
+            let mut y = self.y as isize;
+            if self.lower {
+                y += 1;
+            }
 
-    // Add the start point
+            // Get the point
+            let point = if self.steep {
+                (y, self.x)
+            } else {
+                (self.x, y)
+            };
 
-    let start_y = start.1 + gradient * (start_x - start.0);
-    let gap_x = rfpart(start.0 + 0.5);
+            if self.lower {
+                // Return the lower point
+                self.lower = false;
+                self.x += 1;
+                self.y += self.gradient;
+                Some((point, fpart))
+            } else {
+                if fpart > 0.0 {
+                    // Set to return the lower point if the fractional part is > 0
+                    self.lower = true;
+                } else {
+                    // Otherwise move on
+                    self.x += 1;
+                    self.y += self.gradient;
+                }
 
-    add_points(
-        &mut points, steep,
-        start_x_i, start_y.floor() as isize,
-        rfpart(start_y) * gap_x, fpart(start_y) * gap_x
-    );
-
-    // Add all the middle points
-
-    let mut y = start_y + gradient;
-
-    for x in start_x_i + 1 .. end_x_i {
-        add_points(
-            &mut points, steep,
-            x, y as isize,
-            rfpart(y), fpart(y)
-        );
-        y += gradient;
+                // Return the remainer of the fractional part
+                Some((point, 1.0 - fpart))
+            }
+        } else {
+            None
+        }
     }
+}
 
-    // Add the end point
-
-    let end_y = end.1 + gradient * (end_x - end.0);
-    let gap_x = fpart(end.0 + 0.5);
-
-    add_points(
-        &mut points, steep,
-        end_x_i, end_y.floor() as isize,
-        rfpart(end_y) * gap_x, fpart(end_y) * gap_x
-    );
-
-    points
+/// A convenience function to collect the points from [`XiaolinWu`] into a [`Vec`].
+/// [`XiaolinWu`]: struct.XiaolinWu.html
+/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+pub fn xiaolin_wu(start: Point<f32>, end: Point<f32>) -> Vec<(Point<isize>, f32)> {
+    XiaolinWu::new(start, end).collect()
 }
 
 /// Like [`xiaolin_wu`] but reverses the resulting line if the start and end points get reordered.
 /// [`xiaolin_wu`]: fn.xiaolin_wu.html
-pub fn sorted_xiaolin_wu(start: Point<f32>, end: Point<f32>) -> Points {
+pub fn xiaolin_wu_sorted(start: Point<f32>, end: Point<f32>) -> Vec<(Point<isize>, f32)> {
     let (start, end, reordered) = sort_x(start, end);
 
     let points = xiaolin_wu(start, end);
@@ -139,10 +139,11 @@ pub fn sorted_xiaolin_wu(start: Point<f32>, end: Point<f32>) -> Points {
 }
 
 #[test] 
-fn test_xiaolin_wu() {
+fn tests() {
     assert_eq!(
-        xiaolin_wu((0.0, 0.0), (6.0, 6.0)),
-        [((0, 0), 0.5), ((1, 1), 1.0), ((2, 2), 1.0), ((3, 3), 1.0), ((4, 4), 1.0), ((5, 5), 1.0), ((6, 6), 0.5)]
+        xiaolin_wu((0.0, 0.0), (6.0, 3.0)),
+        [((0, 0), 1.0), ((1, 0), 0.5), ((1, 1), 0.5), ((2, 1), 1.0), ((3, 1), 0.5),
+         ((3, 2), 0.5), ((4, 2), 1.0), ((5, 2), 0.5), ((5, 3), 0.5), ((6, 3), 1.0)]
     );
 
     // The algorithm reorders the points to be left-to-right
@@ -155,7 +156,7 @@ fn test_xiaolin_wu() {
     // sorted_xiaolin_wu should prevent this
 
     assert_eq!(
-        sorted_xiaolin_wu((340.5, 290.77), (110.0, 170.0)),
-        reverse(&sorted_xiaolin_wu((110.0, 170.0), (340.5, 290.77)))
+        xiaolin_wu_sorted((340.5, 290.77), (110.0, 170.0)),
+        reverse(&xiaolin_wu_sorted((110.0, 170.0), (340.5, 290.77)))
     );
 }

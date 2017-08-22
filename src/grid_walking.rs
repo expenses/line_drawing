@@ -1,12 +1,11 @@
 use {Point, sort_y, reverse};
 
-
-/// Walk along a grid, taking only orthagonal steps.
+/// Walk along a grid, taking only orthogonal steps.
 ///
-/// See [this section][section] of the [article] for an interactive demonstration.
+/// See [this section] of the [article] for an interactive demonstration.
 /// 
 /// Note that this algorithm isn't symetrical; if you swap `start` and `end`, the reversed line
-/// might not be the same. See [`walk_grid`] and [`sorted_walk_grid`] for a sorted version.
+/// might not be the same. See [`walk_grid`] and [`walk_grid_sorted`] for a sorted version.
 ///
 /// Example: 
 ///
@@ -25,37 +24,34 @@ use {Point, sort_y, reverse};
 /// (0, 0), (1, 0), (1, 1), (2, 1), (2, 2), (3, 2), (4, 2), (4, 3), (5, 3),
 /// ```
 ///
-/// [section]: http://www.redblobgames.com/grids/line-drawing.html#org3c085ed
+/// [this section]: http://www.redblobgames.com/grids/line-drawing.html#org3c085ed
 /// [article]: http://www.redblobgames.com/grids/line-drawing.html
 /// [`walk_grid`]: fn.walk_grid.html
-/// [`sorted_walk_grid`]: fn.sorted_walk_grid.html
+/// [`walk_grid_sorted`]: fn.walk_grid_sorted.html
 pub struct WalkGrid {
-    x: isize,
-    y: isize,
+    point: Point<isize>,
     ix: f32,
     iy: f32,
     sign_x: isize,
     sign_y: isize,
     ny: f32,
     nx: f32,
-    at_start: bool
 }
 
 impl WalkGrid {
+    #[inline]
     pub fn new(start: Point<isize>, end: Point<isize>) -> WalkGrid {
         // Delta values between the points
         let (dx, dy) = (end.0 - start.0, end.1 - start.1);
 
         WalkGrid {
-            x: start.0,
-            y: start.1,
+            point: start,
             ix: 0.0,
             iy: 0.0,
-            sign_x: if dx > 0 {1} else {-1},
-            sign_y: if dy > 0 {1} else {-1},
+            sign_x: dx.signum(),
+            sign_y: dx.signum(),
             nx: dx.abs() as f32,
-            ny: dy.abs() as f32,
-            at_start: true
+            ny: dy.abs() as f32
         }
     }
 }
@@ -63,22 +59,20 @@ impl WalkGrid {
 impl Iterator for WalkGrid {
     type Item = Point<isize>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.ix < self.nx || self.iy < self.ny {
-            if self.at_start {
-                self.at_start = false;
-                return Some((self.x, self.y));
-            }
+        if self.ix <= self.nx && self.iy <= self.ny {
+            let point = self.point;
 
             if (0.5 + self.ix) / self.nx < (0.5 + self.iy) / self.ny {
-                self.x += self.sign_x;
+                self.point.0 += self.sign_x;
                 self.ix += 1.0;
             } else {
-                self.y += self.sign_y;
+                self.point.1 += self.sign_y;
                 self.iy += 1.0;
             }  
 
-            Some((self.x, self.y))
+            Some(point)
         } else {
             None
         }
@@ -94,7 +88,7 @@ pub fn walk_grid(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
 
 /// Like [`walk_grid`] but sorts the points before hand to ensure that the line is symmetrical.
 /// [`walk_grid`]: fn.walk_grid.html
-pub fn sorted_walk_grid(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
+pub fn walk_grid_sorted(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
     let (start, end, reordered) = sort_y(start, end);
     let points = walk_grid(start, end);
 
@@ -132,32 +126,29 @@ pub fn sorted_walk_grid(start: Point<isize>, end: Point<isize>) -> Vec<Point<isi
 /// [section]: http://www.redblobgames.com/grids/line-drawing.html#org1da485d
 /// [article]: http://www.redblobgames.com/grids/line-drawing.html
 pub struct Supercover {
-    x: isize,
-    y: isize,
+    point: Point<isize>,
     ix: f32,
     iy: f32,
     sign_x: isize,
     sign_y: isize,
     ny: f32,
-    nx: f32,
-    at_start: bool
+    nx: f32
 }
 
 impl Supercover {
+    #[inline]
     pub fn new(start: Point<isize>, end: Point<isize>) -> Supercover {
         // Delta values between the points
         let (dx, dy) = (end.0 - start.0, end.1 - start.1);
 
         Supercover {
-            x: start.0,
-            y: start.1,
+            point: start,
             ix: 0.0,
             iy: 0.0,
-            sign_x: if dx > 0 {1} else {-1},
-            sign_y: if dy > 0 {1} else {-1},
+            sign_x: dx.signum(),
+            sign_y: dy.signum(),
             nx: dx.abs() as f32,
-            ny: dy.abs() as f32,
-            at_start: true
+            ny: dy.abs() as f32
         }
     }
 }
@@ -165,30 +156,28 @@ impl Supercover {
 impl Iterator for Supercover {
     type Item = Point<isize>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.ix < self.nx || self.iy < self.ny {
-            if self.at_start {
-                self.at_start = false;
-                return Some((self.x, self.y));
-            }
+        if self.ix <= self.nx && self.iy <= self.ny {
+            let point = self.point;
 
             let comparison = ((0.5 + self.ix) / self.nx) - ((0.5 + self.iy) / self.ny);
 
             // If the comparison is equal then jump diagonally
             if comparison == 0.0 {
-                self.x += self.sign_x;
-                self.y += self.sign_y;
+                self.point.0 += self.sign_x;
+                self.point.1 += self.sign_y;
                 self.ix += 1.0;
                 self.iy += 1.0;
             } else if comparison < 0.0 {
-                self.x += self.sign_x;
+                self.point.0 += self.sign_x;
                 self.ix += 1.0;
             } else {
-                self.y += self.sign_y;
+                self.point.1 += self.sign_y;
                 self.iy += 1.0;
             }
 
-            Some((self.x, self.y))
+            Some(point)
         } else {
             None
         }
@@ -218,7 +207,7 @@ fn walk_grid_tests() {
     assert_ne!(walk_grid((0, 0), (2, 2)), reverse(&walk_grid((2, 2), (0, 0))));
 
     // sorted walk grid should be symetrical
-    assert_eq!(sorted_walk_grid((0, 0), (20, 20)), reverse(&sorted_walk_grid((20, 20), (0, 0))));
+    assert_eq!(walk_grid_sorted((0, 0), (20, 20)), reverse(&walk_grid_sorted((20, 20), (0, 0))));
 }
 
 #[test]
@@ -236,13 +225,8 @@ fn supercover_tests() {
     );
 
     assert_ne!(walk_grid((0, 0), (-10, 10)), supercover((0, 0), (-10, 10)));
-    assert_ne!(supercover((20, 10), (10, 20)), walk_grid((20, 10), (10, 20)));
+    assert_ne!(walk_grid((20, 10), (10, 20)), supercover((20, 10), (10, 20)));
 
     // otherwise it should do the same as walk grid    
     assert_eq!(supercover((0, 0), (4, 5)), walk_grid((0, 0), (4, 5)));
-
-    // supercover should be symetrical
-    assert_eq!(supercover((0, 0), (2, 3)), reverse(&supercover((2, 3), (0, 0))));
-    assert_eq!(supercover((0, 0), (5, 5)), reverse(&supercover((5, 5), (0, 0))));
-    assert_eq!(supercover((0, 0), (19, 13)), reverse(&supercover((19, 13), (0, 0))));
 }
