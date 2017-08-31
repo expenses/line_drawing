@@ -1,6 +1,7 @@
-use {Point, sort_x, reverse};
-
+use {Point, sort_x, collect_vec_deque};
+use steps::Steps;
 use std::mem::swap;
+use std::collections::VecDeque;
 
 /// An implementation of [Xiaolin Wu's line algorithm].
 ///
@@ -30,7 +31,7 @@ use std::mem::swap;
 /// 
 /// [Xiaolin Wu's line algorithm]: https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm
 /// [`xiaolin_wu`]: fn.xiaolin_wu.html
-/// [`sorted_xiaolin_wu`]: fn.sorted_xiaolin_wu.html
+/// [`xiaolin_wu_sorted`]: fn.xiaolin_wu_sorted.html
 pub struct XiaolinWu {
     steep: bool,
     gradient: f32,
@@ -67,6 +68,11 @@ impl XiaolinWu {
             end_x: end.0.round() as isize,
             lower: false
         }
+    }
+
+    #[inline]
+    pub fn steps(self) -> Steps<(Point<isize>, f32), XiaolinWu> {
+        Steps::new(self)
     }
 }
 
@@ -124,18 +130,12 @@ pub fn xiaolin_wu(start: Point<f32>, end: Point<f32>) -> Vec<(Point<isize>, f32)
     XiaolinWu::new(start, end).collect()
 }
 
-/// Like [`xiaolin_wu`] but reverses the resulting line if the start and end points get reordered.
-/// [`xiaolin_wu`]: fn.xiaolin_wu.html
-pub fn xiaolin_wu_sorted(start: Point<f32>, end: Point<f32>) -> Vec<(Point<isize>, f32)> {
+/// Sorts the points before hand to ensure that the line is symmetrical and collects into a
+/// [`VecDeque`].
+/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
+pub fn xiaolin_wu_sorted(start: Point<f32>, end: Point<f32>) -> VecDeque<(Point<isize>, f32)> {
     let (start, end, reordered) = sort_x(start, end);
-
-    let points = xiaolin_wu(start, end);
-
-    if !reordered {
-        points
-    } else {
-        reverse(&points)
-    }
+    collect_vec_deque(XiaolinWu::new(start, end), reordered)
 }
 
 #[test] 
@@ -151,12 +151,5 @@ fn tests() {
     assert_eq!(
         xiaolin_wu((340.5, 290.77), (110.0, 170.0)),
         xiaolin_wu((110.0, 170.0), (340.5, 290.77))
-    );
-
-    // sorted_xiaolin_wu should prevent this
-
-    assert_eq!(
-        xiaolin_wu_sorted((340.5, 290.77), (110.0, 170.0)),
-        reverse(&xiaolin_wu_sorted((110.0, 170.0), (340.5, 290.77)))
     );
 }

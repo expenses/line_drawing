@@ -1,11 +1,14 @@
-use {reverse, sort_y, Point, Octant};
+use {sort_y, Point, collect_vec_deque};
+use octant::Octant;
+use steps::Steps;
+use std::collections::VecDeque;
 
 /// An implementation of the [mid-point line drawing algorithm].
 ///
 /// The biggest difference between this algorithm and [`bresenham`] is that it uses floating-point points. Also see
-/// [`midpoint`] and [`sorted_midpoint`] for a sorted version.
+/// [`midpoint`] and [`midpoint_sorted`] for a sorted version.
 ///
-/// Example without orthogonal steps:
+/// Example:
 ///
 /// ```
 /// extern crate line_drawing;
@@ -25,7 +28,7 @@ use {reverse, sort_y, Point, Octant};
 /// [mid-point line drawing algorithm]: http://www.mat.univie.ac.at/~kriegl/Skripten/CG/node25.html
 /// [`bresenham`]: fn.bresenham.html
 /// [`midpoint`]: fn.midpoint.html
-/// [`sorted_midpoint`]: fn.sorted_midpoint.html
+/// [`midpoint_sorted`]: fn.midpoint_sorted.html
 pub struct Midpoint {
     octant: Octant,
     point: Point<isize>,
@@ -57,7 +60,12 @@ impl Midpoint {
             k: a * (start.0.round() + 1.0) + b * (start.1.round()  + 0.5) + c,
             end_x: end.0.round() as isize
         }
-    } 
+    }
+
+    #[inline]
+    pub fn steps(self) -> Steps<Point<isize>, Midpoint> {
+        Steps::new(self)
+    }    
 }
 
 impl Iterator for Midpoint {
@@ -92,18 +100,12 @@ pub fn midpoint(start: Point<f32>, end: Point<f32>) -> Vec<Point<isize>> {
     Midpoint::new(start, end).collect()
 }
 
-/// Like [`midpoint`] but sorts the points before hand to ensure that the line is symmetrical.
-/// [`midpoint`]: fn.midpoint.html
-pub fn midpoint_sorted(start: Point<f32>, end: Point<f32>) -> Vec<Point<isize>> {
+/// Sorts the points before hand to ensure that the line is symmetrical and collects into a
+/// [`VecDeque`].
+/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
+pub fn midpoint_sorted(start: Point<f32>, end: Point<f32>) -> VecDeque<Point<isize>> {
     let (start, end, reordered) = sort_y(start, end);
-    
-    let points = midpoint(start, end);
-
-    if !reordered {
-        points
-    } else {
-        reverse(&points)
-    }
+    collect_vec_deque(Midpoint::new(start, end), reordered)
 }
 
 #[test]

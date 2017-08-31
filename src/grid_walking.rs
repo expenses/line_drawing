@@ -1,4 +1,6 @@
-use {Point, sort_y, reverse};
+use {Point, sort_y, collect_vec_deque};
+use steps::Steps;
+use std::collections::VecDeque;
 
 /// Walk along a grid, taking only orthogonal steps.
 ///
@@ -54,6 +56,11 @@ impl WalkGrid {
             ny: dy.abs() as f32
         }
     }
+
+    #[inline]
+    pub fn steps(self) -> Steps<Point<isize>, WalkGrid> {
+        Steps::new(self)
+    }
 }
 
 impl Iterator for WalkGrid {
@@ -86,17 +93,12 @@ pub fn walk_grid(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
     WalkGrid::new(start, end).collect()
 }
 
-/// Like [`walk_grid`] but sorts the points before hand to ensure that the line is symmetrical.
-/// [`walk_grid`]: fn.walk_grid.html
-pub fn walk_grid_sorted(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
+/// Sorts the points before hand to ensure that the line is symmetrical and collects into a
+/// [`VecDeque`].
+/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
+pub fn walk_grid_sorted(start: Point<isize>, end: Point<isize>) -> VecDeque<Point<isize>> {
     let (start, end, reordered) = sort_y(start, end);
-    let points = walk_grid(start, end);
-
-    if !reordered {
-        points
-    } else {
-        reverse(&points)
-    }
+    collect_vec_deque(WalkGrid::new(start, end), reordered)
 }
 
 /// Like [`WalkGrid`] but takes diagonal steps if the line passes directly over a corner.
@@ -151,6 +153,11 @@ impl Supercover {
             ny: dy.abs() as f32
         }
     }
+
+    #[inline]
+    pub fn steps(self) -> Steps<Point<isize>, Supercover> {
+        Steps::new(self)
+    }
 }
 
 impl Iterator for Supercover {
@@ -193,6 +200,9 @@ pub fn supercover(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
 
 #[test]
 fn walk_grid_tests() {
+    let reverse_vec = |points: Vec<_>| points.iter().rev().cloned().collect::<Vec<_>>();
+    let reverse_vec_deque = |points: VecDeque<_>| points.iter().rev().cloned().collect::<VecDeque<_>>();
+
     assert_eq!(
         walk_grid((0, 0), (2, 2)),
         [(0, 0), (0, 1), (1, 1), (1, 2), (2, 2)]
@@ -204,10 +214,10 @@ fn walk_grid_tests() {
     );
 
     // by default, walk grid is asymmetrical
-    assert_ne!(walk_grid((0, 0), (2, 2)), reverse(&walk_grid((2, 2), (0, 0))));
+    assert_ne!(walk_grid((0, 0), (2, 2)), reverse_vec(walk_grid((2, 2), (0, 0))));
 
     // sorted walk grid should be symetrical
-    assert_eq!(walk_grid_sorted((0, 0), (20, 20)), reverse(&walk_grid_sorted((20, 20), (0, 0))));
+    assert_eq!(walk_grid_sorted((0, 0), (20, 20)), reverse_vec_deque(walk_grid_sorted((20, 20), (0, 0))));
 }
 
 #[test]

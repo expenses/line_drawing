@@ -1,15 +1,16 @@
-use Point;
+//! A simple octant struct for transforming line points.
 
+use Point;
 use std::ops::{Neg, Sub};
 
-/// A simple octant struct for transforming line points
+/// A simple octant struct for transforming line points.
 pub struct Octant {
     value: u8
 }
 
 impl Octant {
     #[inline]
-    /// Get the relevant octant from a start and end point
+    /// Get the relevant octant from a start and end point.
     pub fn new<T>(start: Point<T>, end: Point<T>) -> Octant
         where T: Sub<Output = T> + Neg<Output = T> + PartialOrd + Default
     {
@@ -39,7 +40,7 @@ impl Octant {
         }
     }
 
-    /// Convert a point to its position in the octant
+    /// Convert a point to its position in the octant.
     #[inline]
     pub fn to<T: Neg<Output = T>>(&self, point: Point<T>) -> Point<T> {
         match self.value {
@@ -55,7 +56,7 @@ impl Octant {
         }
     }
 
-    /// Convert a point from its position in the octant
+    /// Convert a point from its position in the octant.
     #[inline]
     pub fn from<T: Neg<Output = T>>(&self, point: Point<T>) -> Point<T> {
         match self.value {

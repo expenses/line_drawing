@@ -6,6 +6,8 @@
 //! * The [mid-point line algorithm].
 //! * [Xiaolin Wu's line algorithm].
 //! * [`WalkGrid`] and [`Supercover`] implemented from [this article by Red Blob Games][article].
+//! * [`Bresenham3d`] - A 3-Dimensional implementation of bresenham.
+//! * [`WalkVoxels`] - A similar 3-Dimensional algorithm that only takes orthogonal steps.
 //!
 //! [`bresenham`]: fn.bresenham.html
 //! [`bresenham-rs`]: https://crates.io/crates/bresenham
@@ -14,25 +16,37 @@
 //! [`WalkGrid`]: struct.WalkGrid.html
 //! [`Supercover`]: struct.Supercover.html
 //! [article]: http://www.redblobgames.com/grids/line-drawing.html
+//! [`Bresenham3d`]: struct.Bresenham3d.html
+//! [`WalkVoxels`]: struct.WalkVoxels.html
 
 extern crate bresenham;
+
+pub mod steps;
+pub mod octant;
 
 mod midpoint;
 mod xiaolin_wu;
 mod grid_walking;
 mod fuzzing;
-mod octant;
+mod bresenham_3d;
+mod walk_voxels;
 
 pub use midpoint::*;
 pub use xiaolin_wu::*;
 pub use grid_walking::*;
-pub use octant::*;
+pub use bresenham_3d::*;
+pub use walk_voxels::*;
 
-/// A point in 2D space
+use std::collections::VecDeque;
+
+/// A point in 2D space.
 pub type Point<T> = (T, T);
+/// An point in 3D space.
+pub type Voxel<T> = (T, T, T);
 
 // Sort two points and return whether they were reordered or not
 
+#[inline]
 fn sort_y<T: PartialOrd>(a: Point<T>, b: Point<T>) -> (Point<T>, Point<T>, bool) {
     if a.1 > b.1 {
         (b, a, true)
@@ -41,6 +55,7 @@ fn sort_y<T: PartialOrd>(a: Point<T>, b: Point<T>) -> (Point<T>, Point<T>, bool)
     }
 }
 
+#[inline]
 fn sort_x<T: PartialOrd>(a: Point<T>, b: Point<T>) -> (Point<T>, Point<T>, bool) {
     if a.0 > b.0 {
         (b, a, true)
@@ -49,9 +64,19 @@ fn sort_x<T: PartialOrd>(a: Point<T>, b: Point<T>) -> (Point<T>, Point<T>, bool)
     }
 }
 
-// Reverse an slice of points into a vec
-fn reverse<T: Clone>(points: &[T]) -> Vec<T> {
-    points.iter().rev().cloned().collect()
+#[inline]
+fn collect_vec_deque<T, I>(iter: I, reordered: bool) -> VecDeque<T> where I: Iterator<Item = T> {
+    let mut vec = VecDeque::new();
+
+    for item in iter {
+        if reordered {
+            vec.push_front(item);
+        } else {
+            vec.push_back(item);
+        }
+    }
+
+    vec
 }
 
 /// A simple wrapper around [`bresenham-rs`] that includes the end point.
@@ -86,15 +111,18 @@ pub fn bresenham(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
     points
 }
 
-/// Like [`bresenham`] but sorts the points before hand to ensure that the line is symmetrical.
-/// [`bresenham`]: fn.bresenham.html
-pub fn bresenham_sorted(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
+/// Sorts the points before hand to ensure that the line is symmetrical and collects into a
+/// [`VecDeque`].
+/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
+pub fn bresenham_sorted(start: Point<isize>, end: Point<isize>) -> VecDeque<Point<isize>> {
     let (start, end, reordered) = sort_y(start, end);
-    let points = bresenham(start, end);
+    let mut points = collect_vec_deque(bresenham::Bresenham::new(start, end), reordered);
 
-    if !reordered {
-        points
+    if reordered {
+        points.push_front(end);
     } else {
-        reverse(&points)
+        points.push_back(end);
     }
+
+    points
 }
