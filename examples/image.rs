@@ -1,22 +1,20 @@
 extern crate line_drawing;
 extern crate image;
-extern crate bresenham;
 
-use bresenham::Bresenham;
 use line_drawing::*;
 use image::{Rgb, DynamicImage, ImageBuffer};
 
 type Image = ImageBuffer<Rgb<u8>, Vec<u8>>;
 
 // Draw a line of pixels onto the image with a specific colour
-fn draw_line<T>(image: &mut Image, line: T, colour: [u8; 3]) where T: Iterator<Item = Point<isize>> {
+fn draw_line<T>(image: &mut Image, line: T, colour: [u8; 3]) where T: Iterator<Item = Point<i32>> {
     for point in line {
         image.put_pixel(point.0 as u32, point.1 as u32, Rgb(colour));
     }
 }
 
 // Draw an anti-aliased line of pixels
-fn draw_xiaolin_wu(image: &mut Image, line: XiaolinWu) {
+fn draw_xiaolin_wu(image: &mut Image, line: XiaolinWu<f32, i32>) {
     for (point, value) in line {
         image.put_pixel(point.0 as u32, point.1 as u32, Rgb([(255.0 * value).round() as u8; 3]));
     }

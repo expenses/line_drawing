@@ -1,4 +1,4 @@
-use {sort_y, Point, collect_vec_deque};
+use {sort_y, Point, collect_vec_deque, FloatNum, SignedNum};
 use octant::Octant;
 use steps::Steps;
 use std::collections::VecDeque;
@@ -13,9 +13,9 @@ use std::collections::VecDeque;
 /// ```
 /// extern crate line_drawing;
 /// use line_drawing::Midpoint; 
-///
+/// 
 /// fn main() {
-///     for (x, y) in Midpoint::new((0.2, 0.02), (2.8, 7.7)) {
+///     for (x, y) in Midpoint::<f32, i8>::new((0.2, 0.02), (2.8, 7.7)) {
 ///         print!("({}, {}), ", x, y);
 ///     }
 /// }
@@ -29,18 +29,18 @@ use std::collections::VecDeque;
 /// [`bresenham`]: fn.bresenham.html
 /// [`midpoint`]: fn.midpoint.html
 /// [`midpoint_sorted`]: fn.midpoint_sorted.html
-pub struct Midpoint {
+pub struct Midpoint<I, O> {
     octant: Octant,
-    point: Point<isize>,
-    a: f32,
-    b: f32,
-    k: f32,
-    end_x: isize
+    point: Point<O>,
+    a: I,
+    b: I,
+    k: I,
+    end_x: O
 }
 
-impl Midpoint {
+impl<I: FloatNum, O: SignedNum> Midpoint<I, O> {
     #[inline]
-    pub fn new(start: Point<f32>, end: Point<f32>) -> Midpoint {
+    pub fn new(start: Point<I>, end: Point<I>) -> Midpoint<I, O> {
         // Get the octant to use
         let octant = Octant::new(start, end);
 
@@ -56,20 +56,20 @@ impl Midpoint {
 
         Midpoint {
             octant, a, b,
-            point: (start.0.round() as isize, start.1.round() as isize),
-            k: a * (start.0.round() + 1.0) + b * (start.1.round()  + 0.5) + c,
-            end_x: end.0.round() as isize
+            point: (O::cast(start.0.round()), O::cast(start.1.round())),
+            k: a * (start.0.round() + I::one()) + b * (start.1.round() + I::cast(0.5)) + c,
+            end_x: O::cast(end.0.round())
         }
     }
 
     #[inline]
-    pub fn steps(self) -> Steps<Point<isize>, Midpoint> {
+    pub fn steps(self) -> Steps<Point<O>, Midpoint<I, O>> {
         Steps::new(self)
     }    
 }
 
-impl Iterator for Midpoint {
-    type Item = Point<isize>;
+impl<I: FloatNum, O: SignedNum> Iterator for Midpoint<I, O> {
+    type Item = Point<O>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -77,14 +77,14 @@ impl Iterator for Midpoint {
             let point = self.octant.from(self.point);
 
             // Take an N step
-            if self.k <= 0.0 {
+            if self.k <= I::zero() {
                 self.k += self.b;
-                self.point.1 += 1;
+                self.point.1 += O::one();
             }
 
             // Take an E step
             self.k += self.a;
-            self.point.0 += 1;
+            self.point.0 += O::one();
 
             Some(point)
         } else {
@@ -96,14 +96,16 @@ impl Iterator for Midpoint {
 /// A convenience function to collect the points from [`Midpoint`] into a [`Vec`].
 /// [`Midpoint`]: struct.Midpoint.html
 /// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-pub fn midpoint(start: Point<f32>, end: Point<f32>) -> Vec<Point<isize>> {
+#[inline]
+pub fn midpoint<I: FloatNum, O: SignedNum>(start: Point<I>, end: Point<I>) -> Vec<Point<O>> {
     Midpoint::new(start, end).collect()
 }
 
 /// Sorts the points before hand to ensure that the line is symmetrical and collects into a
 /// [`VecDeque`].
 /// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
-pub fn midpoint_sorted(start: Point<f32>, end: Point<f32>) -> VecDeque<Point<isize>> {
+#[inline]
+pub fn midpoint_sorted<I: FloatNum, O: SignedNum>(start: Point<I>, end: Point<I>) -> VecDeque<Point<O>> {
     let (start, end, reordered) = sort_y(start, end);
     collect_vec_deque(Midpoint::new(start, end), reordered)
 }

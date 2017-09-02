@@ -2,6 +2,7 @@
 
 use Point;
 use std::ops::{Neg, Sub};
+use num_traits::Zero;
 
 /// A simple octant struct for transforming line points.
 pub struct Octant {
@@ -12,19 +13,19 @@ impl Octant {
     #[inline]
     /// Get the relevant octant from a start and end point.
     pub fn new<T>(start: Point<T>, end: Point<T>) -> Octant
-        where T: Sub<Output = T> + Neg<Output = T> + PartialOrd + Default
+        where T: Sub<Output = T> + Neg<Output = T> + PartialOrd + Zero
     {
         let mut value = 0;
         let mut dx = end.0 - start.0;
         let mut dy = end.1 - start.1;
 
-        if dy < T::default() {
+        if dy < T::zero() {
             dx = -dx;
             dy = -dy;
             value += 4;
         }
 
-        if dx < T::default() {
+        if dx < T::zero() {
             let tmp = dx;
             dx = dy;
             dy = -tmp;

@@ -1,6 +1,7 @@
-use Voxel;
+use {Voxel, SignedNum, sort_voxels, collect_vec_deque};
 use steps::Steps;
 use std::cmp::max;
+use std::collections::VecDeque;
 
 /// An 3-D implementation of bresenham, sourced from [this site].
 ///
@@ -24,24 +25,24 @@ use std::cmp::max;
 /// ```
 ///
 /// [this site]: http://members.chello.at/~easyfilter/bresenham.html
-pub struct Bresenham3d {
-    sign_x: isize,
-    sign_y: isize,
-    sign_z: isize,
-    err_x: isize,
-    err_y: isize,
-    err_z: isize,
-    len_x: isize,
-    len_y: isize,
-    len_z: isize,
-    longest: isize,
-    count: isize,
-    voxel: Voxel<isize>,
+pub struct Bresenham3d<T> {
+    sign_x: T,
+    sign_y: T,
+    sign_z: T,
+    err_x: T,
+    err_y: T,
+    err_z: T,
+    len_x: T,
+    len_y: T,
+    len_z: T,
+    longest: T,
+    count: T,
+    voxel: Voxel<T>,
 }
 
-impl Bresenham3d {
+impl<T: SignedNum> Bresenham3d<T> {
     #[inline]
-    pub fn new(start: Voxel<isize>, end: Voxel<isize>) -> Bresenham3d {
+    pub fn new(start: Voxel<T>, end: Voxel<T>) -> Bresenham3d<T> {
         let delta_x = end.0 - start.0;
         let delta_y = end.1 - start.1;
         let delta_z = end.2 - start.2;
@@ -55,9 +56,9 @@ impl Bresenham3d {
         Bresenham3d {
             len_x, len_y, len_z, longest,
             count: longest,
-            err_x: longest / 2,
-            err_y: longest / 2,
-            err_z: longest / 2,
+            err_x: longest / T::cast(2),
+            err_y: longest / T::cast(2),
+            err_z: longest / T::cast(2),
             sign_x: delta_x.signum(),
             sign_y: delta_y.signum(),
             sign_z: delta_z.signum(),
@@ -66,35 +67,35 @@ impl Bresenham3d {
     }
 
     #[inline]
-    pub fn steps(self) -> Steps<Voxel<isize>, Bresenham3d> {
+    pub fn steps(self) -> Steps<Voxel<T>, Bresenham3d<T>> {
         Steps::new(self)
     }
 }
 
-impl Iterator for Bresenham3d {
-    type Item = Voxel<isize>;
+impl<T: SignedNum> Iterator for Bresenham3d<T> {
+    type Item = Voxel<T>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.count >= 0 {
-            self.count -= 1;
+        if self.count >= T::zero() {
+            self.count -= T::one();
             self.err_x -= self.len_x;
             self.err_y -= self.len_y; 
             self.err_z -= self.len_z; 
 
             let voxel = self.voxel;
             
-            if self.err_x < 0 {
+            if self.err_x < T::zero() {
                 self.err_x += self.longest;
                 self.voxel.0 += self.sign_x;
             }
             
-            if self.err_y < 0 {
+            if self.err_y < T::zero() {
                 self.err_y += self.longest;
                 self.voxel.1 += self.sign_y;
             }
 
-            if self.err_z < 0 {
+            if self.err_z < T::zero() {
                 self.err_z += self.longest;
                 self.voxel.2 += self.sign_z;
             }
@@ -109,8 +110,18 @@ impl Iterator for Bresenham3d {
 /// A convenience function to collect the points from [`Bresenham3d`] into a [`Vec`].
 /// [`Bresenham3d`]: struct.Bresenham3d.html
 /// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-pub fn bresenham_3d(start: Voxel<isize>, end: Voxel<isize>) -> Vec<Voxel<isize>> {
+#[inline]
+pub fn bresenham_3d<T: SignedNum>(start: Voxel<T>, end: Voxel<T>) -> Vec<Voxel<T>> {
     Bresenham3d::new(start, end).collect()
+}
+
+/// Sorts the voxels before hand to ensure that the line is symmetrical and collects into a
+/// [`VecDeque`].
+/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
+#[inline]
+pub fn bresenham_3d_sorted<T: SignedNum>(start: Voxel<T>, end: Voxel<T>) -> VecDeque<Voxel<T>> {
+    let (start, end, reordered) = sort_voxels(start, end);
+    collect_vec_deque(Bresenham3d::new(start, end), reordered)
 }
 
 #[test]

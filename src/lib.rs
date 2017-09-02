@@ -2,28 +2,31 @@
 //!
 //! Currently implemented:
 //!
-//! * [`bresenham`] through [`bresenham-rs`].
-//! * The [mid-point line algorithm].
-//! * [Xiaolin Wu's line algorithm].
-//! * [`WalkGrid`] and [`Supercover`] implemented from [this article by Red Blob Games][article].
+//! * [`Bresenham`] - An implementation of [Bresenham's line algorithm].
 //! * [`Bresenham3d`] - A 3-Dimensional implementation of bresenham.
+//! * [`Midpoint`] - The [mid-point line algorithm].
+//! * [`WalkGrid`] and [`Supercover`] - implemented from [this article by Red Blob Games][article].
 //! * [`WalkVoxels`] - A similar 3-Dimensional algorithm that only takes orthogonal steps.
+//! * [`XiaolinWu`] - [Xiaolin Wu's line algorithm].
 //!
-//! [`bresenham`]: fn.bresenham.html
-//! [`bresenham-rs`]: https://crates.io/crates/bresenham
+//! [`Bresenham`]: struct.Bresenham.html
+//! [Bresenham's line algorithm]: https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
+//! [`Bresenham3d`]: struct.Bresenham3d.html
+//! [`Midpoint`]: struct.Midpoint.html
 //! [mid-point line algorithm]: http://www.mat.univie.ac.at/~kriegl/Skripten/CG/node25.html
-//! [Xiaolin Wu's line algorithm]: https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm
 //! [`WalkGrid`]: struct.WalkGrid.html
 //! [`Supercover`]: struct.Supercover.html
 //! [article]: http://www.redblobgames.com/grids/line-drawing.html
-//! [`Bresenham3d`]: struct.Bresenham3d.html
+//! [`XiaolinWu`]: struct.XiaolinWu.html
+//! [Xiaolin Wu's line algorithm]: https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm
 //! [`WalkVoxels`]: struct.WalkVoxels.html
 
-extern crate bresenham;
+extern crate num_traits;
 
 pub mod steps;
 pub mod octant;
 
+mod bresenham;
 mod midpoint;
 mod xiaolin_wu;
 mod grid_walking;
@@ -31,6 +34,7 @@ mod fuzzing;
 mod bresenham_3d;
 mod walk_voxels;
 
+pub use bresenham::*;
 pub use midpoint::*;
 pub use xiaolin_wu::*;
 pub use grid_walking::*;
@@ -38,6 +42,7 @@ pub use bresenham_3d::*;
 pub use walk_voxels::*;
 
 use std::collections::VecDeque;
+use num_traits::{Float, NumCast, NumAssignOps, Signed};
 
 /// A point in 2D space.
 pub type Point<T> = (T, T);
@@ -65,6 +70,21 @@ fn sort_x<T: PartialOrd>(a: Point<T>, b: Point<T>) -> (Point<T>, Point<T>, bool)
 }
 
 #[inline]
+fn sort_voxels<T: PartialOrd>(a: Voxel<T>, b: Voxel<T>) -> (Voxel<T>, Voxel<T>, bool) {
+    if a.2 == b.2 {
+        if a.1 > b.1 {
+            (b, a, true)
+        } else {
+            (a, b, false)
+        }
+    } else if a.2 > b.2 {
+        (b, a, true)
+    } else {
+        (a, b, false)
+    }
+}
+
+#[inline]
 fn collect_vec_deque<T, I>(iter: I, reordered: bool) -> VecDeque<T> where I: Iterator<Item = T> {
     let mut vec = VecDeque::new();
 
@@ -79,50 +99,27 @@ fn collect_vec_deque<T, I>(iter: I, reordered: bool) -> VecDeque<T> where I: Ite
     vec
 }
 
-/// A simple wrapper around [`bresenham-rs`] that includes the end point.
-///
-/// If all you need is this function then just using [`bresenham-rs`] would probably be easier.
-/// See [`sorted_bresenham`] for a sorted version.
-///
-/// Example: 
-///
-/// ```
-/// extern crate line_drawing;
-/// use line_drawing::bresenham; 
-///
-/// fn main() {
-///     for (x, y) in bresenham((0, 0), (5, 6)) {
-///         print!("({}, {}), ", x, y);
-///     }
-/// }
-/// ```
-///
-/// ```text
-/// (0, 0), (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6),
-/// ```
-///
-/// [`bresenham-rs`]: https://crates.io/crates/bresenham
-/// [`sorted_bresenham`]: fn.sorted_bresenham.html
-pub fn bresenham(start: Point<isize>, end: Point<isize>) -> Vec<Point<isize>> {
-    // Use the bresenham iterator to collect up the points
-    let mut points: Vec<_> = bresenham::Bresenham::new(start, end).collect();
-    // Add the last point
-    points.push(end);
-    points
-}
-
-/// Sorts the points before hand to ensure that the line is symmetrical and collects into a
-/// [`VecDeque`].
-/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
-pub fn bresenham_sorted(start: Point<isize>, end: Point<isize>) -> VecDeque<Point<isize>> {
-    let (start, end, reordered) = sort_y(start, end);
-    let mut points = collect_vec_deque(bresenham::Bresenham::new(start, end), reordered);
-
-    if reordered {
-        points.push_front(end);
-    } else {
-        points.push_back(end);
+/// All the floating-point primitives.
+pub trait FloatNum: Float + NumAssignOps {
+    #[inline]
+    fn cast<T: NumCast>(value: T) -> Self {
+        NumCast::from(value).unwrap()
     }
-
-    points
 }
+
+impl FloatNum for f32 {}
+impl FloatNum for f64 {}
+
+/// All the signed integer primitives.
+pub trait SignedNum: Signed + Ord + Copy + NumCast + NumAssignOps {
+    #[inline]
+    fn cast<T: NumCast>(value: T) -> Self {
+        NumCast::from(value).unwrap()
+    }
+}
+
+impl SignedNum for i8 {}
+impl SignedNum for i16 {}
+impl SignedNum for i32 {}
+impl SignedNum for i64 {}
+impl SignedNum for isize {}

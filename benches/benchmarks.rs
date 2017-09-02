@@ -5,8 +5,6 @@ extern crate bresenham;
 extern crate test;
 
 use line_drawing::*;
-use line_drawing::steps::Steps;
-use bresenham::Bresenham;
 use test::Bencher;
 
 const START: (isize, isize) = (678, 1000);
@@ -22,41 +20,63 @@ const START_VOXEL_FLOAT: (f32, f32, f32) = (START_FLOAT.0, START_FLOAT.1, 0.0);
 const END_VOXEL_FLOAT: (f32, f32, f32) = (END_FLOAT.0, END_FLOAT.1, 0.0);
 
 #[bench]
+fn bench_bresenham(bencher: &mut Bencher) {
+    bencher.iter(|| black_box(Bresenham::new(START, END)));
+}
+
+#[bench]
+fn bench_bresenham_vec(bencher: &mut Bencher) {
+    bencher.iter(|| black_box(bresenham(START, END).iter()));
+}
+
+#[bench]
+fn bench_bresenham_vec_deque(bencher: &mut Bencher) {
+    bencher.iter(|| black_box(bresenham_sorted(START, END).iter()));
+}
+
+#[bench]
+fn bench_bresenham_crate(bencher: &mut Bencher) {
+    bencher.iter(|| black_box(bresenham::Bresenham::new(START, END)));
+}
+
+#[bench]
 fn bench_walk_grid(bencher: &mut Bencher) {
-    bencher.iter(|| WalkGrid::new(START, END).count());
+    bencher.iter(|| black_box(WalkGrid::new(START, END)));
 }
 
 #[bench]
 fn bench_supercover(bencher: &mut Bencher) {
-    bencher.iter(|| Supercover::new(START, END).count());
-}
-
-#[bench]
-fn bench_bresenham(bencher: &mut Bencher) {
-    bencher.iter(|| Bresenham::new(START, END).count());
+    bencher.iter(|| black_box(Supercover::new(START, END)));
 }
 
 #[bench]
 fn bench_midpoint(bencher: &mut Bencher) {
-    bencher.iter(|| Midpoint::new(START_FLOAT, END_FLOAT).count());
+    bencher.iter(|| black_box(Midpoint::<_, isize>::new(START_FLOAT, END_FLOAT)));
 }
 
 #[bench]
 fn bench_xiaolin_wu(bencher: &mut Bencher) {
-    bencher.iter(|| XiaolinWu::new(START_FLOAT, END_FLOAT).count());
+    bencher.iter(|| black_box(XiaolinWu::<_, isize>::new(START_FLOAT, END_FLOAT)));
 }
 
 #[bench]
 fn bench_bresenham_3d(bencher: &mut Bencher) {
-    bencher.iter(|| Bresenham3d::new(START_VOXEL, END_VOXEL).count());
+    bencher.iter(|| black_box(Bresenham3d::new(START_VOXEL, END_VOXEL)));
 }
 
 #[bench]
 fn bench_walk_voxels(bencher: &mut Bencher) {
-    bencher.iter(|| WalkVoxels::new(START_VOXEL_FLOAT, END_VOXEL_FLOAT).count());
+    bencher.iter(|| black_box(WalkVoxels::<_, isize>::new(START_VOXEL_FLOAT, END_VOXEL_FLOAT)));
 }
 
 #[bench]
 fn bench_steps_bresenham(bencher: &mut Bencher) {
-    bencher.iter(|| Steps::new(Bresenham::new(START, END)).count());
+    bencher.iter(|| black_box(Bresenham::new(START, END).steps()));
+}
+
+#[inline]
+fn black_box<T: Iterator>(iter: T) {
+    for item in iter {
+        test::black_box(item);
+    }
 }

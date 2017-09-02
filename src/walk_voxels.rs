@@ -1,13 +1,14 @@
-use Voxel;
+use {Voxel, FloatNum, SignedNum, sort_voxels, collect_vec_deque};
+use std::collections::VecDeque;
 
 #[inline]
-fn compare(a: isize, b: isize) -> isize {
-    if a > b { 1 } else if a == b { 0 } else { -1 }
+fn compare<T: SignedNum>(a: T, b: T) -> T {
+    if a > b { T::one() } else if a == b { T::zero() } else { -T::one() }
 }
 
 #[inline]
-fn round(voxel: Voxel<f32>) -> Voxel<isize> {
-    (voxel.0.round() as isize, voxel.1.round() as isize, voxel.2.round() as isize)
+fn round<I: FloatNum, O: SignedNum>(voxel: Voxel<I>) -> Voxel<O> {
+    (O::cast(voxel.0.round()), O::cast(voxel.1.round()), O::cast(voxel.2.round()))
 }
 
 /// Walk between two voxels, taking orthogonal steps and visiting all voxels in between.
@@ -22,7 +23,7 @@ fn round(voxel: Voxel<f32>) -> Voxel<isize> {
 /// use line_drawing::WalkVoxels; 
 ///
 /// fn main() {
-///     for (i, (x, y, z)) in WalkVoxels::new((0.0, 0.0, 0.0), (5.0, 6.0, 7.0)).enumerate() {
+///     for (i, (x, y, z)) in WalkVoxels::<f32, i8>::new((0.0, 0.0, 0.0), (5.0, 6.0, 7.0)).enumerate() {
 ///         if i > 0 && i % 5 == 0 {
 ///             println!();
 ///         }
@@ -39,25 +40,25 @@ fn round(voxel: Voxel<f32>) -> Voxel<isize> {
 /// ```
 ///
 /// [this Stack Overflow answer]: https://stackoverflow.com/a/16507714
-pub struct WalkVoxels {
-    voxel: Voxel<isize>,
-    count: isize,
-    sign_x: isize,
-    sign_y: isize,
-    sign_z: isize,
-    err_x: f32,
-    err_y: f32,
-    err_z: f32,
-    d_err_x: f32,
-    d_err_y: f32,
-    d_err_z: f32
+pub struct WalkVoxels<I, O> {
+    voxel: Voxel<O>,
+    count: O,
+    sign_x: O,
+    sign_y: O,
+    sign_z: O,
+    err_x: I,
+    err_y: I,
+    err_z: I,
+    d_err_x: I,
+    d_err_y: I,
+    d_err_z: I
 }
 
-impl WalkVoxels {
+impl<I: FloatNum, O: SignedNum> WalkVoxels<I, O> {
     #[inline]
-    pub fn new(start: Voxel<f32>, end: Voxel<f32>) -> WalkVoxels {
-        let start_i = round(start);
-        let end_i = round(end);
+    pub fn new(start: Voxel<I>, end: Voxel<I>) -> WalkVoxels<I, O> {
+        let start_i: Voxel<O> = round(start);
+        let end_i: Voxel<O> = round(end);
 
         let count = (start_i.0 - end_i.0).abs() +
                     (start_i.1 - end_i.1).abs() +
@@ -68,14 +69,14 @@ impl WalkVoxels {
         let sign_z = compare(end_i.2, start_i.2);
 
         // Planes for each axis that we will next cross
-        let x_plane = start_i.0 + (if end_i.0 > start_i.0 {1} else {0});
-        let y_plane = start_i.1 + (if end_i.1 > start_i.1 {1} else {0});
-        let z_plane = start_i.2 + (if end_i.2 > start_i.2 {1} else {0});
+        let x_plane = start_i.0 + (if end_i.0 > start_i.0 {O::one()} else {O::zero()});
+        let y_plane = start_i.1 + (if end_i.1 > start_i.1 {O::one()} else {O::zero()});
+        let z_plane = start_i.2 + (if end_i.2 > start_i.2 {O::one()} else {O::zero()});
 
         // Only used for multiplying up the error margins
-        let vx = if start.0 == end.0 {1.0} else {end.0 - start.0};
-        let vy = if start.1 == end.1 {1.0} else {end.1 - start.1};
-        let vz = if start.2 == end.2 {1.0} else {end.2 - start.2};
+        let vx = if start.0 == end.0 {I::one()} else {end.0 - start.0};
+        let vy = if start.1 == end.1 {I::one()} else {end.1 - start.1};
+        let vz = if start.2 == end.2 {I::one()} else {end.2 - start.2};
 
         // Error is normalized to vx * vy * vz so we only have to multiply up
         let vxvy = vx * vy;
@@ -89,40 +90,44 @@ impl WalkVoxels {
             // gx0 + vx * rx === gxp
             // vx * rx === gxp - gx0
             // rx === (gxp - gx0) / vx
-            err_x: (x_plane as f32 - start.0) * vyvz,
-            err_y: (y_plane as f32 - start.1) * vxvz,
-            err_z: (z_plane as f32 - start.2) * vxvy,
-            d_err_x: sign_x as f32 * vyvz,
-            d_err_y: sign_y as f32 * vxvz,
-            d_err_z: sign_z as f32 * vxvy
+            err_x: (I::cast(x_plane) - start.0) * vyvz,
+            err_y: (I::cast(y_plane) - start.1) * vxvz,
+            err_z: (I::cast(z_plane) - start.2) * vxvy,
+            d_err_x: I::cast(sign_x) * vyvz,
+            d_err_y: I::cast(sign_y) * vxvz,
+            d_err_z: I::cast(sign_z) * vxvy
         }
     }
 }
 
-impl Iterator for WalkVoxels {
-    type Item = Voxel<isize>;
+impl<I: FloatNum, O: SignedNum> Iterator for WalkVoxels<I, O> {
+    type Item = Voxel<O>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.count >= 0 {
-            self.count -= 1;
+        if self.count >= O::zero() {
+            self.count -= O::one();
             
             // Which plane do we cross first?
             let xr = self.err_x.abs();
             let yr = self.err_y.abs();
             let zr = self.err_z.abs();
 
+            let x_zero = self.sign_x == O::zero();
+            let y_zero = self.sign_y == O::zero();
+            let z_zero = self.sign_z == O::zero();
+
             let voxel = self.voxel;
 
-            if self.sign_x != 0 && (self.sign_y == 0 || xr < yr) && (self.sign_z == 0 || xr < zr) {
+            if !x_zero && (y_zero || xr < yr) && (z_zero || xr < zr) {
                 self.voxel.0 += self.sign_x;
                 self.err_x += self.d_err_x;
             }
-            else if self.sign_y != 0 && (self.sign_z == 0 || yr < zr) {
+            else if !y_zero && (z_zero || yr < zr) {
                 self.voxel.1 += self.sign_y;
                 self.err_y += self.d_err_y;
             }
-            else if self.sign_z != 0 {
+            else if !z_zero {
                 self.voxel.2 += self.sign_z;
                 self.err_z += self.d_err_z;
             }
@@ -137,8 +142,18 @@ impl Iterator for WalkVoxels {
 /// A convenience function to collect the points from [`WalkVoxels`] into a [`Vec`].
 /// [`WalkVoxels`]: struct.WalkVoxels.html
 /// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-pub fn walk_voxels(start: Voxel<f32>, end: Voxel<f32>) -> Vec<Voxel<isize>> {
+#[inline]
+pub fn walk_voxels<I: FloatNum, O: SignedNum>(start: Voxel<I>, end: Voxel<I>) -> Vec<Voxel<O>> {
     WalkVoxels::new(start, end).collect()
+}
+
+/// Sorts the voxels before hand to ensure that the line is symmetrical and collects into a
+/// [`VecDeque`].
+/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
+#[inline]
+pub fn walk_voxels_sorted<I: FloatNum, O: SignedNum>(start: Voxel<I>, end: Voxel<I>) -> VecDeque<Voxel<O>> {
+    let (start, end, reordered) = sort_voxels(start, end);
+    collect_vec_deque(WalkVoxels::new(start, end), reordered)
 }
 
 #[test]
