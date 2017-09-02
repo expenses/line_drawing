@@ -52,7 +52,7 @@ impl<T: SignedNum> WalkGrid<T> {
             ix: 0.0,
             iy: 0.0,
             sign_x: dx.signum(),
-            sign_y: dx.signum(),
+            sign_y: dy.signum(),
             nx: dx.abs().to_f32().unwrap(),
             ny: dy.abs().to_f32().unwrap()
         }
@@ -216,6 +216,16 @@ fn walk_grid_tests() {
         [(0, 0), (1, 0), (1, 1), (2, 1), (2, 2), (3, 2)]
     );
 
+    assert_eq!(
+        walk_grid((0, 0), (0, 5)),
+        [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
+    );
+
+    assert_eq!(
+        walk_grid((0, 0), (5, 0)),
+        [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]
+    );
+
     // by default, walk grid is asymmetrical
     assert_ne!(walk_grid((0, 0), (2, 2)), reverse_slice(&walk_grid((2, 2), (0, 0))));
 
@@ -235,6 +245,16 @@ fn supercover_tests() {
     assert_eq!(
         supercover((0, 0), (3, 1)),
         [(0, 0), (1, 0), (2, 1), (3, 1)]
+    );
+
+    assert_eq!(
+        supercover((0, 0), (0, 5)),
+        [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
+    );
+
+    assert_eq!(
+        supercover((0, 0), (5, 0)),
+        [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]
     );
 
     assert_ne!(walk_grid((0, 0), (-10, 10)), supercover((0, 0), (-10, 10)));
