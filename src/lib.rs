@@ -107,8 +107,7 @@ pub trait FloatNum: Float + NumAssignOps {
     }
 }
 
-impl FloatNum for f32 {}
-impl FloatNum for f64 {}
+impl<T: Float + NumAssignOps> FloatNum for T {}
 
 /// All the signed integer primitives.
 pub trait SignedNum: Signed + Ord + Copy + NumCast + NumAssignOps {
@@ -118,8 +117,4 @@ pub trait SignedNum: Signed + Ord + Copy + NumCast + NumAssignOps {
     }
 }
 
-impl SignedNum for i8 {}
-impl SignedNum for i16 {}
-impl SignedNum for i32 {}
-impl SignedNum for i64 {}
-impl SignedNum for isize {}
+impl<T: Signed + Ord + Copy + NumCast + NumAssignOps> SignedNum for T {}
