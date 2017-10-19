@@ -43,6 +43,10 @@ fn main() {
     draw_xiaolin_wu(&mut image, XiaolinWu::new(b, c));
     draw_xiaolin_wu(&mut image, XiaolinWu::new(c, a));
 
+    for point in BresenhamCircle::new(200, 100, 50) {
+        image.put_pixel(point.0 as u32, point.1 as u32, Rgb([255, 0, 0]));
+    }
+
     // Save the image
     image.save("example.png").unwrap();
 }

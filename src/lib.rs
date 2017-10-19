@@ -33,6 +33,7 @@ mod grid_walking;
 mod fuzzing;
 mod bresenham_3d;
 mod walk_voxels;
+mod bresenham_circle;
 
 pub use bresenham::*;
 pub use midpoint::*;
@@ -40,6 +41,7 @@ pub use xiaolin_wu::*;
 pub use grid_walking::*;
 pub use bresenham_3d::*;
 pub use walk_voxels::*;
+pub use bresenham_circle::*;
 
 use std::collections::VecDeque;
 use num_traits::{Float, NumCast, NumAssignOps, Signed};

@@ -74,6 +74,11 @@ fn bench_steps_bresenham(bencher: &mut Bencher) {
     bencher.iter(|| black_box(Bresenham::new(START, END).steps()));
 }
 
+#[bench]
+fn bench_bresenham_circle(bencher: &mut Bencher) {
+    bencher.iter(|| black_box(BresenhamCircle::new(0, 0, 300)));
+}
+
 #[inline]
 fn black_box<T: Iterator>(iter: T) {
     for item in iter {
