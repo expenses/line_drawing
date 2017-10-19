@@ -4,6 +4,7 @@ Currently implemented:
 
 * `Bresenham` - An implementation of [Bresenham's line algorithm].
 * `Bresenham3d` - A 3-Dimensional implementation of bresenham.
+* `BresenhamCircle` - Bresenham's circle algorithm.
 * `Midpoint` - The [mid-point line algorithm].
 * `WalkGrid` and `Supercover` - implemented from [this article by Red Blob Games][article].
 * `WalkVoxels` - A similar 3-Dimensional algorithm that only takes orthogonal steps.
