@@ -45,63 +45,12 @@ pub use bresenham_3d::*;
 pub use walk_voxels::*;
 pub use bresenham_circle::*;
 
-use std::collections::VecDeque;
 use num_traits::{Float, NumCast, NumAssignOps, Signed};
 
 /// A point in 2D space.
 pub type Point<T> = (T, T);
 /// An point in 3D space.
 pub type Voxel<T> = (T, T, T);
-
-// Sort two points and return whether they were reordered or not
-
-#[inline]
-fn sort_y<T: PartialOrd>(a: Point<T>, b: Point<T>) -> (Point<T>, Point<T>, bool) {
-    if a.1 > b.1 {
-        (b, a, true)
-    } else {
-        (a, b, false)
-    }
-}
-
-#[inline]
-fn sort_x<T: PartialOrd>(a: Point<T>, b: Point<T>) -> (Point<T>, Point<T>, bool) {
-    if a.0 > b.0 {
-        (b, a, true)
-    } else {
-        (a, b, false)
-    }
-}
-
-#[inline]
-fn sort_voxels<T: PartialOrd>(a: Voxel<T>, b: Voxel<T>) -> (Voxel<T>, Voxel<T>, bool) {
-    if a.2 == b.2 {
-        if a.1 > b.1 {
-            (b, a, true)
-        } else {
-            (a, b, false)
-        }
-    } else if a.2 > b.2 {
-        (b, a, true)
-    } else {
-        (a, b, false)
-    }
-}
-
-#[inline]
-fn collect_vec_deque<T, I>(iter: I, reordered: bool) -> VecDeque<T> where I: Iterator<Item = T> {
-    let mut vec = VecDeque::new();
-
-    for item in iter {
-        if reordered {
-            vec.push_front(item);
-        } else {
-            vec.push_back(item);
-        }
-    }
-
-    vec
-}
 
 /// All the floating-point primitives.
 pub trait FloatNum: Float + NumAssignOps {

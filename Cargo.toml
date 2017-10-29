@@ -1,6 +1,6 @@
 [package]
 name = "line_drawing"
-version = "0.5.3"
+version = "0.6.0"
 authors = ["Expenses <expenses@airmail.cc>"]
 description = "A collection of line-drawing algorithms for use in graphics and video games."
 repository = "https://github.com/expenses/line_drawing"

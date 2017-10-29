@@ -7,17 +7,12 @@ use self::rand::distributions::range::SampleRange;
 use *;
 
 use std::ops::Neg;
-use std::collections::VecDeque;
 
 const NUM_TESTS: u16 = 10000;
 const RANGE: isize = 500;
 const RANGE_FLOAT: f32 = 500.0;
 
 pub fn reverse_slice<T: Clone>(points: &[T]) -> Vec<T> {
-    points.iter().rev().cloned().collect()
-}
-
-pub fn reverse_vec_deque<T: Clone>(points: VecDeque<T>) -> VecDeque<T> {
     points.iter().rev().cloned().collect()
 }
 
@@ -35,6 +30,8 @@ fn random_voxel<T>(rng: &mut rand::ThreadRng, range: T) -> Voxel<T>
 
 #[test]
 fn supercover_symmetrical() {
+    let supercover = |a, b| Supercover::new(a, b).collect::<Vec<_>>();
+
     let mut rng = rand::thread_rng();
 
     for _ in 0 .. NUM_TESTS {
@@ -51,6 +48,7 @@ fn supercover_symmetrical() {
 #[test]
 #[should_panic]
 fn bresenham_not_symmetrical() {
+    let bresenham = |a, b| Bresenham::new(a, b).collect::<Vec<_>>();
     let mut rng = rand::thread_rng();
 
     for _ in 0 .. NUM_TESTS {
@@ -67,6 +65,7 @@ fn bresenham_not_symmetrical() {
 #[test]
 #[should_panic]
 fn bresenham_3d_not_symmetrical() {
+    let bresenham_3d = |a, b| Bresenham3d::new(a, b).collect::<Vec<_>>();
     let mut rng = rand::thread_rng();
 
     for _ in 0 .. NUM_TESTS {
@@ -83,6 +82,7 @@ fn bresenham_3d_not_symmetrical() {
 #[test]
 #[should_panic]
 fn walk_voxels_symmetrical() {
+    let walk_voxels = |a, b| WalkVoxels::<_, i16>::new(a, b).collect::<Vec<_>>();
     let mut rng = rand::thread_rng();
 
     for _ in 0 .. NUM_TESTS {
@@ -90,23 +90,8 @@ fn walk_voxels_symmetrical() {
         let end = random_voxel(&mut rng, RANGE_FLOAT);
 
         assert_eq!(
-            walk_voxels::<_, i32>(start, end),
+            walk_voxels(start, end),
             reverse_slice(&walk_voxels(end, start))
-        );
-    }
-}
-
-#[test]
-fn bresenham_3d_sorted_symmetrical() {
-    let mut rng = rand::thread_rng();
-
-    for _ in 0 .. NUM_TESTS {
-        let start = random_voxel(&mut rng, RANGE);
-        let end = random_voxel(&mut rng, RANGE);
-
-        assert_eq!(
-            bresenham_3d_sorted(start, end),
-            reverse_vec_deque(bresenham_3d_sorted(end, start))
         );
     }
 }

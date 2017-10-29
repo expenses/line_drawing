@@ -35,8 +35,8 @@ pub struct BresenhamCircle<T> {
 
 impl<T: SignedNum> BresenhamCircle<T> {
     #[inline]
-    pub fn new(center_x: T, center_y: T, radius: T) -> BresenhamCircle<T> {
-        BresenhamCircle {
+    pub fn new(center_x: T, center_y: T, radius: T) -> Self {
+        Self {
             center_x, center_y, radius,
             x: -radius,
             y: T::zero(),

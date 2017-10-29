@@ -12,7 +12,7 @@ pub struct Octant {
 impl Octant {
     #[inline]
     /// Get the relevant octant from a start and end point.
-    pub fn new<T>(start: Point<T>, end: Point<T>) -> Octant
+    pub fn new<T>(start: Point<T>, end: Point<T>) -> Self
         where T: Sub<Output = T> + Neg<Output = T> + PartialOrd + Zero
     {
         let mut value = 0;
@@ -36,7 +36,7 @@ impl Octant {
             value += 1
         }
 
-        Octant {
+        Self {
             value
         }
     }

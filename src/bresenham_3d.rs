@@ -1,7 +1,6 @@
-use {Voxel, SignedNum, sort_voxels, collect_vec_deque};
+use {Voxel, SignedNum};
 use steps::Steps;
 use std::cmp::max;
-use std::collections::VecDeque;
 
 /// An 3-D implementation of bresenham, sourced from [this site].
 ///
@@ -42,7 +41,7 @@ pub struct Bresenham3d<T> {
 
 impl<T: SignedNum> Bresenham3d<T> {
     #[inline]
-    pub fn new(start: Voxel<T>, end: Voxel<T>) -> Bresenham3d<T> {
+    pub fn new(start: Voxel<T>, end: Voxel<T>) -> Self {
         let delta_x = end.0 - start.0;
         let delta_y = end.1 - start.1;
         let delta_z = end.2 - start.2;
@@ -53,7 +52,7 @@ impl<T: SignedNum> Bresenham3d<T> {
 
         let longest = max(len_x, max(len_y, len_z));
 
-        Bresenham3d {
+        Self {
             len_x, len_y, len_z, longest,
             count: longest,
             err_x: longest / T::cast(2),
@@ -67,7 +66,7 @@ impl<T: SignedNum> Bresenham3d<T> {
     }
 
     #[inline]
-    pub fn steps(self) -> Steps<Voxel<T>, Bresenham3d<T>> {
+    pub fn steps(self) -> Steps<Voxel<T>, Self> {
         Steps::new(self)
     }
 }
@@ -107,27 +106,10 @@ impl<T: SignedNum> Iterator for Bresenham3d<T> {
     }
 }
 
-/// A convenience function to collect the points from [`Bresenham3d`] into a [`Vec`].
-/// [`Bresenham3d`]: struct.Bresenham3d.html
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-#[inline]
-pub fn bresenham_3d<T: SignedNum>(start: Voxel<T>, end: Voxel<T>) -> Vec<Voxel<T>> {
-    Bresenham3d::new(start, end).collect()
-}
-
-/// Sorts the voxels before hand to ensure that the line is symmetrical and collects into a
-/// [`VecDeque`].
-/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
-#[inline]
-pub fn bresenham_3d_sorted<T: SignedNum>(start: Voxel<T>, end: Voxel<T>) -> VecDeque<Voxel<T>> {
-    let (start, end, reordered) = sort_voxels(start, end);
-    collect_vec_deque(Bresenham3d::new(start, end), reordered)
-}
-
 #[test]
 fn tests() {
     assert_eq!(
-        bresenham_3d((0, 0, 0), (5, 5, 5)),
+        Bresenham3d::new((0, 0, 0), (5, 5, 5)).collect::<Vec<_>>(),
         [(0, 0, 0), (1, 1, 1), (2, 2, 2), (3, 3, 3), (4, 4, 4), (5, 5, 5)]
     );
 

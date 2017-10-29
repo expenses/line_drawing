@@ -1,7 +1,6 @@
-use {Point, SignedNum, sort_y, collect_vec_deque};
+use {Point, SignedNum};
 use octant::Octant;
 use steps::Steps;
-use std::collections::VecDeque;
 
 /// An implementation of [Bresenham's line algorithm].
 ///
@@ -36,7 +35,7 @@ pub struct Bresenham<T> {
 
 impl<T: SignedNum> Bresenham<T> {
     #[inline]
-    pub fn new(start: Point<T>, end: Point<T>) -> Bresenham<T> {
+    pub fn new(start: Point<T>, end: Point<T>) -> Self {
         let octant = Octant::new(start, end);
         let start = octant.to(start);
         let end = octant.to(end);
@@ -44,7 +43,7 @@ impl<T: SignedNum> Bresenham<T> {
         let delta_x = end.0 - start.0;
         let delta_y = end.1 - start.1;
 
-        Bresenham {
+        Self {
             delta_x, delta_y, octant,
             point: start,
             end_x: end.0,
@@ -53,7 +52,7 @@ impl<T: SignedNum> Bresenham<T> {
     }
 
     #[inline]
-    pub fn steps(self) -> Steps<Point<T>, Bresenham<T>> {
+    pub fn steps(self) -> Steps<Point<T>, Self> {
         Steps::new(self)
     }
 }
@@ -81,27 +80,10 @@ impl<T: SignedNum> Iterator for Bresenham<T> {
     }
 }
 
-/// A convenience function to collect the points from [`Bresenham`] into a [`Vec`].
-/// [`Bresenham`]: struct.Bresenham.html
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-#[inline]
-pub fn bresenham<T: SignedNum>(start: Point<T>, end: Point<T>) -> Vec<Point<T>> {
-    Bresenham::new(start, end).collect()
-}
-
-/// Sorts the points before hand to ensure that the line is symmetrical and collects into a
-/// [`VecDeque`].
-/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
-#[inline]
-pub fn bresenham_sorted<T: SignedNum>(start: Point<T>, end: Point<T>) -> VecDeque<Point<T>> {
-    let (start, end, reordered) = sort_y(start, end);
-    collect_vec_deque(Bresenham::new(start, end), reordered)
-}
-
 #[test]
 fn test() {
     assert_eq!(
-        bresenham((0, 0), (5, 5)),
+        Bresenham::new((0, 0), (5, 5)).collect::<Vec<_>>(),
         [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5)]
     )
 }

@@ -25,16 +25,6 @@ fn bench_bresenham(bencher: &mut Bencher) {
 }
 
 #[bench]
-fn bench_bresenham_vec(bencher: &mut Bencher) {
-    bencher.iter(|| black_box(bresenham(START, END).iter()));
-}
-
-#[bench]
-fn bench_bresenham_vec_deque(bencher: &mut Bencher) {
-    bencher.iter(|| black_box(bresenham_sorted(START, END).iter()));
-}
-
-#[bench]
 fn bench_bresenham_crate(bencher: &mut Bencher) {
     bencher.iter(|| black_box(bresenham::Bresenham::new(START, END)));
 }

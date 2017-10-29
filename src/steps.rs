@@ -31,15 +31,15 @@
 ///
 /// [`Steps`]: struct.Steps.html
 /// [`WalkGrid`]: ../struct.WalkGrid.html
-pub struct Steps<T: Copy, I: Iterator<Item = T>> {
+pub struct Steps<T, I> {
     iterator: I,
     prev: Option<T>
 }
 
 impl<T: Copy, I: Iterator<Item = T>> Steps<T, I> {
     #[inline]
-    pub fn new(mut iterator: I) -> Steps<T, I> {
-        Steps {
+    pub fn new(mut iterator: I) -> Self {
+        Self {
             prev: iterator.next(),
             iterator
         }

@@ -1,16 +1,13 @@
-use {Point, sort_x, collect_vec_deque, FloatNum, SignedNum};
+use {Point, FloatNum, SignedNum};
 use steps::Steps;
 use std::mem::swap;
-use std::collections::VecDeque;
 
 /// An implementation of [Xiaolin Wu's line algorithm].
 ///
 /// This algorithm works based on floating-points and returns an extra variable for how much a
 /// a point is covered, which is useful for anti-aliasing.
 /// 
-/// Note that due to the implementation, the returned line will always go from left to right. Also
-/// see [`xiaolin_wu`] and [`xiaolin_wu_sorted`] for a version that reverses the resulting line in
-/// this case.
+/// Note that due to the implementation, the returned line will always go from left to right.
 /// 
 /// Example:
 /// 
@@ -30,8 +27,6 @@ use std::collections::VecDeque;
 /// ```
 /// 
 /// [Xiaolin Wu's line algorithm]: https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm
-/// [`xiaolin_wu`]: fn.xiaolin_wu.html
-/// [`xiaolin_wu_sorted`]: fn.xiaolin_wu_sorted.html
 pub struct XiaolinWu<I, O> {
     steep: bool,
     gradient: I,
@@ -43,7 +38,7 @@ pub struct XiaolinWu<I, O> {
 
 impl<I: FloatNum, O: SignedNum> XiaolinWu<I, O> {
     #[inline]
-    pub fn new(mut start: Point<I>, mut end: Point<I>) -> XiaolinWu<I, O> {
+    pub fn new(mut start: Point<I>, mut end: Point<I>) -> Self {
         let steep = (end.1 - start.1).abs() > (end.0 - start.0).abs();
 
         if steep {
@@ -61,7 +56,7 @@ impl<I: FloatNum, O: SignedNum> XiaolinWu<I, O> {
             gradient = I::one();
         }
 
-        XiaolinWu {
+        Self {
             steep, gradient,
             x: O::cast(start.0.round()),
             y: start.1,
@@ -71,7 +66,7 @@ impl<I: FloatNum, O: SignedNum> XiaolinWu<I, O> {
     }
 
     #[inline]
-    pub fn steps(self) -> Steps<(Point<O>, I), XiaolinWu<I, O>> {
+    pub fn steps(self) -> Steps<(Point<O>, I), Self> {
         Steps::new(self)
     }
 }
@@ -123,29 +118,12 @@ impl<I: FloatNum, O: SignedNum> Iterator for XiaolinWu<I, O> {
     }
 }
 
-/// A convenience function to collect the points from [`XiaolinWu`] into a [`Vec`].
-/// [`XiaolinWu`]: struct.XiaolinWu.html
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-#[inline]
-pub fn xiaolin_wu<I: FloatNum, O: SignedNum>(start: Point<I>, end: Point<I>) -> Vec<(Point<O>, I)> {
-    XiaolinWu::new(start, end).collect()
-}
-
-/// Sorts the points before hand to ensure that the line is symmetrical and collects into a
-/// [`VecDeque`].
-/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
-#[inline]
-pub fn xiaolin_wu_sorted<I: FloatNum, O: SignedNum>(start: Point<I>, end: Point<I>) -> VecDeque<(Point<O>, I)> {
-    let (start, end, reordered) = sort_x(start, end);
-    collect_vec_deque(XiaolinWu::new(start, end), reordered)
-}
-
 #[test] 
 fn tests() {
-    use fuzzing::reverse_vec_deque;
+    let xiaolin_wu = |a, b| XiaolinWu::new(a, b).collect::<Vec<_>>();
 
     assert_eq!(
-        xiaolin_wu::<_, i16>((0.0, 0.0), (6.0, 3.0)),
+        xiaolin_wu((0.0, 0.0), (6.0, 3.0)),
         [((0, 0), 1.0), ((1, 0), 0.5), ((1, 1), 0.5), ((2, 1), 1.0), ((3, 1), 0.5),
          ((3, 2), 0.5), ((4, 2), 1.0), ((5, 2), 0.5), ((5, 3), 0.5), ((6, 3), 1.0)]
     );
@@ -153,14 +131,7 @@ fn tests() {
     // The algorithm reorders the points to be left-to-right
 
     assert_eq!(
-        xiaolin_wu::<_, i16>((340.5, 290.77), (110.0, 170.0)),
+        xiaolin_wu((340.5, 290.77), (110.0, 170.0)),
         xiaolin_wu((110.0, 170.0), (340.5, 290.77))
-    );
-
-    // sorted_xiaolin_wu should prevent this
-
-    assert_eq!(
-        xiaolin_wu_sorted::<_, i16>((340.5, 290.77), (110.0, 170.0)),
-        reverse_vec_deque(xiaolin_wu_sorted((110.0, 170.0), (340.5, 290.77)))
     );
 }

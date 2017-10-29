@@ -1,14 +1,12 @@
-use {Point, sort_y, collect_vec_deque};
+use {Point, SignedNum};
 use steps::Steps;
-use std::collections::VecDeque;
-use SignedNum;
 
 /// Walk along a grid, taking only orthogonal steps.
 ///
 /// See [this section] of the [article] for an interactive demonstration.
 /// 
 /// Note that this algorithm isn't symetrical; if you swap `start` and `end`, the reversed line
-/// might not be the same. See [`walk_grid`] and [`walk_grid_sorted`] for a sorted version.
+/// might not be the same.
 ///
 /// Example: 
 ///
@@ -29,8 +27,6 @@ use SignedNum;
 ///
 /// [this section]: http://www.redblobgames.com/grids/line-drawing.html#org3c085ed
 /// [article]: http://www.redblobgames.com/grids/line-drawing.html
-/// [`walk_grid`]: fn.walk_grid.html
-/// [`walk_grid_sorted`]: fn.walk_grid_sorted.html
 pub struct WalkGrid<T> {
     point: Point<T>,
     ix: f32,
@@ -87,23 +83,6 @@ impl<T: SignedNum> Iterator for WalkGrid<T> {
     }
 }
 
-/// A convenience function to collect the points from [`WalkGrid`] into a [`Vec`].
-/// [`WalkGrid`]: struct.WalkGrid.html
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-#[inline]
-pub fn walk_grid<T: SignedNum>(start: Point<T>, end: Point<T>) -> Vec<Point<T>> {
-    WalkGrid::new(start, end).collect()
-}
-
-/// Sorts the points before hand to ensure that the line is symmetrical and collects into a
-/// [`VecDeque`].
-/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
-#[inline]
-pub fn walk_grid_sorted<T: SignedNum>(start: Point<T>, end: Point<T>) -> VecDeque<Point<T>> {
-    let (start, end, reordered) = sort_y(start, end);
-    collect_vec_deque(WalkGrid::new(start, end), reordered)
-}
-
 /// Like [`WalkGrid`] but takes diagonal steps if the line passes directly over a corner.
 ///
 /// See [this section][section] of the [article] for an interactive demonstration.
@@ -142,11 +121,11 @@ pub struct Supercover<T> {
 
 impl<T: SignedNum> Supercover<T> {
     #[inline]
-    pub fn new(start: Point<T>, end: Point<T>) -> Supercover<T> {
+    pub fn new(start: Point<T>, end: Point<T>) -> Self {
         // Delta values between the points
         let (dx, dy) = (end.0 - start.0, end.1 - start.1);
 
-        Supercover {
+        Self {
             point: start,
             ix: 0.0,
             iy: 0.0,
@@ -158,7 +137,7 @@ impl<T: SignedNum> Supercover<T> {
     }
 
     #[inline]
-    pub fn steps(self) -> Steps<Point<T>, Supercover<T>> {
+    pub fn steps(self) -> Steps<Point<T>, Self> {
         Steps::new(self)
     }
 }
@@ -194,17 +173,10 @@ impl<T: SignedNum> Iterator for Supercover<T> {
     }
 }
 
-/// A convenience function to collect the points from [`Supercover`] into a [`Vec`].
-/// [`Supercover`]: struct.Supercover.html
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-#[inline]
-pub fn supercover<T: SignedNum>(start: Point<T>, end: Point<T>) -> Vec<Point<T>> {
-    Supercover::new(start, end).collect()
-}
-
 #[test]
 fn walk_grid_tests() {
-    use fuzzing::{reverse_slice, reverse_vec_deque};
+    use fuzzing::reverse_slice;
+    let walk_grid = |a, b| WalkGrid::new(a, b).collect::<Vec<_>>();
 
     assert_eq!(
         walk_grid((0, 0), (2, 2)),
@@ -228,13 +200,13 @@ fn walk_grid_tests() {
 
     // by default, walk grid is asymmetrical
     assert_ne!(walk_grid((0, 0), (2, 2)), reverse_slice(&walk_grid((2, 2), (0, 0))));
-
-    // sorted walk grid should be symetrical
-    assert_eq!(walk_grid_sorted((0, 0), (20, 20)), reverse_vec_deque(walk_grid_sorted((20, 20), (0, 0))));
 }
 
 #[test]
 fn supercover_tests() {
+    let walk_grid = |a, b| WalkGrid::new(a, b).collect::<Vec<_>>();
+    let supercover = |a, b| Supercover::new(a, b).collect::<Vec<_>>();
+
     // supercover should jump diagonally if the difference is equal
 
     assert_eq!(

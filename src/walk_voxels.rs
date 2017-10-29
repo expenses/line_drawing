@@ -1,5 +1,5 @@
-use {Voxel, FloatNum, SignedNum, sort_voxels, collect_vec_deque};
-use std::collections::VecDeque;
+use {Voxel, FloatNum, SignedNum};
+use steps::Steps;
 
 #[inline]
 fn compare<T: SignedNum>(a: T, b: T) -> T {
@@ -56,7 +56,7 @@ pub struct WalkVoxels<I, O> {
 
 impl<I: FloatNum, O: SignedNum> WalkVoxels<I, O> {
     #[inline]
-    pub fn new(start: Voxel<I>, end: Voxel<I>) -> WalkVoxels<I, O> {
+    pub fn new(start: Voxel<I>, end: Voxel<I>) -> Self {
         let start_i: Voxel<O> = round(start);
         let end_i: Voxel<O> = round(end);
 
@@ -83,7 +83,7 @@ impl<I: FloatNum, O: SignedNum> WalkVoxels<I, O> {
         let vxvz = vx * vz;
         let vyvz = vy * vz;
 
-        WalkVoxels {
+        Self {
             sign_x, sign_y, sign_z, count,
             voxel: start_i,
             // Error from the next plane accumulators, scaled up by vx * vy * vz
@@ -97,6 +97,11 @@ impl<I: FloatNum, O: SignedNum> WalkVoxels<I, O> {
             d_err_y: I::cast(sign_y) * vxvz,
             d_err_z: I::cast(sign_z) * vxvy
         }
+    }
+
+    #[inline]
+    pub fn steps(self) -> Steps<Voxel<O>, Self> {
+        Steps::new(self)
     }
 }
 
@@ -139,30 +144,13 @@ impl<I: FloatNum, O: SignedNum> Iterator for WalkVoxels<I, O> {
     }
 }
 
-/// A convenience function to collect the points from [`WalkVoxels`] into a [`Vec`].
-/// [`WalkVoxels`]: struct.WalkVoxels.html
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-#[inline]
-pub fn walk_voxels<I: FloatNum, O: SignedNum>(start: Voxel<I>, end: Voxel<I>) -> Vec<Voxel<O>> {
-    WalkVoxels::new(start, end).collect()
-}
-
-/// Sorts the voxels before hand to ensure that the line is symmetrical and collects into a
-/// [`VecDeque`].
-/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
-#[inline]
-pub fn walk_voxels_sorted<I: FloatNum, O: SignedNum>(start: Voxel<I>, end: Voxel<I>) -> VecDeque<Voxel<O>> {
-    let (start, end, reordered) = sort_voxels(start, end);
-    collect_vec_deque(WalkVoxels::new(start, end), reordered)
-}
-
 #[test]
 fn tests() {
     assert_eq!(
-        walk_voxels(
+        WalkVoxels::new(
             (0.472, -1.100, 0.179),
             (1.114, -0.391, 0.927)
-        ),
+        ).collect::<Vec<_>>(),
         [(0, -1, 0), (1, -1, 0), (1, -1, 1), (1, 0, 1)]
     );
 }

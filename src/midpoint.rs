@@ -1,12 +1,10 @@
-use {sort_y, Point, collect_vec_deque, FloatNum, SignedNum};
+use {Point, FloatNum, SignedNum};
 use octant::Octant;
 use steps::Steps;
-use std::collections::VecDeque;
 
 /// An implementation of the [mid-point line drawing algorithm].
 ///
-/// The biggest difference between this algorithm and [`bresenham`] is that it uses floating-point points. Also see
-/// [`midpoint`] and [`midpoint_sorted`] for a sorted version.
+/// The biggest difference between this algorithm and [`Bresenham`] is that it uses floating-point points.
 ///
 /// Example:
 ///
@@ -26,9 +24,7 @@ use std::collections::VecDeque;
 /// ```
 ///
 /// [mid-point line drawing algorithm]: http://www.mat.univie.ac.at/~kriegl/Skripten/CG/node25.html
-/// [`bresenham`]: fn.bresenham.html
-/// [`midpoint`]: fn.midpoint.html
-/// [`midpoint_sorted`]: fn.midpoint_sorted.html
+/// [`Bresenham`]: struct.bresenham.html
 pub struct Midpoint<I, O> {
     octant: Octant,
     point: Point<O>,
@@ -40,7 +36,7 @@ pub struct Midpoint<I, O> {
 
 impl<I: FloatNum, O: SignedNum> Midpoint<I, O> {
     #[inline]
-    pub fn new(start: Point<I>, end: Point<I>) -> Midpoint<I, O> {
+    pub fn new(start: Point<I>, end: Point<I>) -> Self {
         // Get the octant to use
         let octant = Octant::new(start, end);
 
@@ -54,7 +50,7 @@ impl<I: FloatNum, O: SignedNum> Midpoint<I, O> {
         let b = end.0 - start.0;
         let c = start.0 * end.1 - end.0 * start.1;
 
-        Midpoint {
+        Self {
             octant, a, b,
             point: (O::cast(start.0.round()), O::cast(start.1.round())),
             k: a * (start.0.round() + I::one()) + b * (start.1.round() + I::cast(0.5)) + c,
@@ -63,7 +59,7 @@ impl<I: FloatNum, O: SignedNum> Midpoint<I, O> {
     }
 
     #[inline]
-    pub fn steps(self) -> Steps<Point<O>, Midpoint<I, O>> {
+    pub fn steps(self) -> Steps<Point<O>, Self> {
         Steps::new(self)
     }    
 }
@@ -93,25 +89,10 @@ impl<I: FloatNum, O: SignedNum> Iterator for Midpoint<I, O> {
     }
 }
 
-/// A convenience function to collect the points from [`Midpoint`] into a [`Vec`].
-/// [`Midpoint`]: struct.Midpoint.html
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-#[inline]
-pub fn midpoint<I: FloatNum, O: SignedNum>(start: Point<I>, end: Point<I>) -> Vec<Point<O>> {
-    Midpoint::new(start, end).collect()
-}
-
-/// Sorts the points before hand to ensure that the line is symmetrical and collects into a
-/// [`VecDeque`].
-/// [`VecDeque`]: https://doc.rust-lang.org/nightly/collections/vec_deque/struct.VecDeque.html
-#[inline]
-pub fn midpoint_sorted<I: FloatNum, O: SignedNum>(start: Point<I>, end: Point<I>) -> VecDeque<Point<O>> {
-    let (start, end, reordered) = sort_y(start, end);
-    collect_vec_deque(Midpoint::new(start, end), reordered)
-}
-
 #[test]
 fn tests() {
+    let midpoint = |a, b| Midpoint::new(a, b).collect::<Vec<_>>();
+
     assert_eq!(
         midpoint((0.0, 0.0), (-5.0, -5.0)),
         [(0, 0), (-1, -1), (-2, -2), (-3, -3), (-4, -4), (-5, -5)]
