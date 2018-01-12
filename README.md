@@ -1,3 +1,6 @@
+[![](https://img.shields.io/crates/v/line_drawing.svg)](https://crates.io/crates/line_drawing)
+[![](https://docs.rs/line_drawing/badge.svg)](https://docs.rs/line_drawing)
+
 A collection of line-drawing algorithms for use in graphics and video games.
 
 Currently implemented:
