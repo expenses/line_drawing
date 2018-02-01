@@ -85,7 +85,9 @@ fn bresenham_3d_not_symmetrical() {
 #[test]
 #[should_panic]
 fn walk_voxels_symmetrical() {
-    let walk_voxels = |a, b| WalkVoxels::<_, i16>::new(a, b).collect::<Vec<_>>();
+    use VoxelOrigin::Center;
+
+    let walk_voxels = |a, b| WalkVoxels::<_, i16>::new(a, b, &Center).collect::<Vec<_>>();
     let mut rng = rand::thread_rng();
 
     for _ in 0..NUM_TESTS {

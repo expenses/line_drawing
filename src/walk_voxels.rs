@@ -12,9 +12,25 @@ fn compare<T: SignedNum>(a: T, b: T) -> T {
     }
 }
 
-#[inline]
-fn round<I: FloatNum, O: SignedNum>(voxel: Voxel<I>) -> Voxel<O> {
-    (O::cast(voxel.0.round()), O::cast(voxel.1.round()), O::cast(voxel.2.round()))
+/// Where the center of the voxel is, at the center or a corner.
+///
+/// Generally you want `Center`.
+pub enum VoxelOrigin {
+    Corner,
+    Center,
+}
+
+impl VoxelOrigin {
+    #[inline]
+    /// Round a voxel's position based on the origin.
+    pub fn round<I: FloatNum, O: SignedNum>(&self, voxel: Voxel<I>) -> Voxel<O> {
+        let (x, y, z) = match *self {
+            VoxelOrigin::Corner => voxel,
+            VoxelOrigin::Center => (voxel.0.round(), voxel.1.round(), voxel.2.round()),
+        };
+
+        (O::cast(x), O::cast(y), O::cast(z))
+    }
 }
 
 /// Walk between two voxels, taking orthogonal steps and visiting all voxels in between.
@@ -26,10 +42,13 @@ fn round<I: FloatNum, O: SignedNum>(voxel: Voxel<I>) -> Voxel<O> {
 ///
 /// ```
 /// extern crate line_drawing;
-/// use line_drawing::WalkVoxels;
-///
+/// use line_drawing::{VoxelOrigin, WalkVoxels};
+/// 
 /// fn main() {
-///     for (i, (x, y, z)) in WalkVoxels::<f32, i8>::new((0.0, 0.0, 0.0), (5.0, 6.0, 7.0)).enumerate() {
+///     let a = (0.0, 0.0, 0.0);
+///     let b = (5.0, 6.0, 7.0);
+///
+///     for (i, (x, y, z)) in WalkVoxels::<f32, i8>::new(a, b, &VoxelOrigin::Center).enumerate() {
 ///         if i > 0 && i % 5 == 0 {
 ///             println!();
 ///         }
@@ -62,9 +81,10 @@ pub struct WalkVoxels<I, O> {
 
 impl<I: FloatNum, O: SignedNum> WalkVoxels<I, O> {
     #[inline]
-    pub fn new(start: Voxel<I>, end: Voxel<I>) -> Self {
-        let start_i: Voxel<O> = round(start);
-        let end_i: Voxel<O> = round(end);
+    /// Create a new `WalkVoxels` iterator, with the origin of the voxels.
+    pub fn new(start: Voxel<I>, end: Voxel<I>, origin: &VoxelOrigin) -> Self {
+        let start_i: Voxel<O> = origin.round(start);
+        let end_i: Voxel<O> = origin.round(end);
 
         let count =
             (start_i.0 - end_i.0).abs() + (start_i.1 - end_i.1).abs() + (start_i.2 - end_i.2).abs();
@@ -177,7 +197,11 @@ impl<I: FloatNum, O: SignedNum> Iterator for WalkVoxels<I, O> {
 #[test]
 fn tests() {
     assert_eq!(
-        WalkVoxels::new((0.472, -1.100, 0.179), (1.114, -0.391, 0.927)).collect::<Vec<_>>(),
+        WalkVoxels::new(
+            (0.472, -1.100, 0.179),
+            (1.114, -0.391, 0.927),
+            &VoxelOrigin::Center
+        ).collect::<Vec<_>>(),
         [(0, -1, 0), (1, -1, 0), (1, -1, 1), (1, 0, 1)]
     );
 }

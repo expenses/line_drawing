@@ -60,6 +60,7 @@ fn bench_walk_voxels(bencher: &mut Bencher) {
         black_box(WalkVoxels::<_, isize>::new(
             START_VOXEL_FLOAT,
             END_VOXEL_FLOAT,
+            &VoxelOrigin::Center,
         ))
     });
 }
