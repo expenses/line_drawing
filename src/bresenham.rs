@@ -10,7 +10,7 @@ use steps::Steps;
 ///
 /// ```rust
 /// extern crate line_drawing;
-/// use line_drawing::Bresenham; 
+/// use line_drawing::Bresenham;
 ///
 /// fn main() {
 ///     for (x, y) in Bresenham::new((0, 0), (5, 6)) {
@@ -30,7 +30,7 @@ pub struct Bresenham<T> {
     delta_x: T,
     delta_y: T,
     error: T,
-    octant: Octant
+    octant: Octant,
 }
 
 impl<T: SignedNum> Bresenham<T> {
@@ -44,7 +44,9 @@ impl<T: SignedNum> Bresenham<T> {
         let delta_y = end.1 - start.1;
 
         Self {
-            delta_x, delta_y, octant,
+            delta_x,
+            delta_y,
+            octant,
             point: start,
             end_x: end.0,
             error: delta_y - delta_x,

@@ -1,5 +1,5 @@
-extern crate line_drawing;
 extern crate image;
+extern crate line_drawing;
 
 use line_drawing::*;
 use image::*;
@@ -13,7 +13,10 @@ const SCALE_I: i32 = SCALE as i32;
 const SCALE_HALF: i32 = SCALE_I / 2;
 
 // Draw a line of pixels onto the image with a specific colour
-fn draw_line<T>(image: &mut DynamicImage, line: T, colour: [u8; 4]) where T: Iterator<Item = Point<i32>> {
+fn draw_line<T>(image: &mut DynamicImage, line: T, colour: [u8; 4])
+where
+    T: Iterator<Item = Point<i32>>,
+{
     for point in line {
         image.put_pixel(point.0 as u32, point.1 as u32, Rgba(colour));
     }

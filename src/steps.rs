@@ -33,7 +33,7 @@
 /// [`WalkGrid`]: ../struct.WalkGrid.html
 pub struct Steps<T, I> {
     iterator: I,
-    prev: Option<T>
+    prev: Option<T>,
 }
 
 impl<T: Copy, I: Iterator<Item = T>> Steps<T, I> {
@@ -41,7 +41,7 @@ impl<T: Copy, I: Iterator<Item = T>> Steps<T, I> {
     pub fn new(mut iterator: I) -> Self {
         Self {
             prev: iterator.next(),
-            iterator
+            iterator,
         }
     }
 }
@@ -51,10 +51,12 @@ impl<T: Copy, I: Iterator<Item = T>> Iterator for Steps<T, I> {
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        self.iterator.next().and_then(|next| self.prev.map(|prev| {
-            self.prev = Some(next);
-            (prev, next)
-        }))
+        self.iterator.next().and_then(|next| {
+            self.prev.map(|prev| {
+                self.prev = Some(next);
+                (prev, next)
+            })
+        })
     }
 }
 
@@ -63,7 +65,9 @@ fn steps() {
     use Midpoint;
 
     assert_eq!(
-        Midpoint::new((0.0, 0.0), (3.0, 4.0)).steps().collect::<Vec<_>>(),
+        Midpoint::new((0.0, 0.0), (3.0, 4.0))
+            .steps()
+            .collect::<Vec<_>>(),
         [
             ((0, 0), (1, 1)),
             ((1, 1), (2, 2)),

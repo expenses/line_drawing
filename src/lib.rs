@@ -45,7 +45,7 @@ pub use bresenham_3d::*;
 pub use walk_voxels::*;
 pub use bresenham_circle::*;
 
-use num_traits::{Float, NumCast, NumAssignOps, Signed};
+use num_traits::{Float, NumAssignOps, NumCast, Signed};
 
 /// A point in 2D space.
 pub type Point<T> = (T, T);

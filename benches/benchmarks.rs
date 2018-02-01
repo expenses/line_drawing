@@ -1,7 +1,7 @@
 #![feature(test)]
 
-extern crate line_drawing;
 extern crate bresenham;
+extern crate line_drawing;
 extern crate test;
 
 use line_drawing::*;
@@ -56,7 +56,12 @@ fn bench_bresenham_3d(bencher: &mut Bencher) {
 
 #[bench]
 fn bench_walk_voxels(bencher: &mut Bencher) {
-    bencher.iter(|| black_box(WalkVoxels::<_, isize>::new(START_VOXEL_FLOAT, END_VOXEL_FLOAT)));
+    bencher.iter(|| {
+        black_box(WalkVoxels::<_, isize>::new(
+            START_VOXEL_FLOAT,
+            END_VOXEL_FLOAT,
+        ))
+    });
 }
 
 #[bench]

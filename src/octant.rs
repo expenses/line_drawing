@@ -6,14 +6,15 @@ use num_traits::Zero;
 
 /// A simple octant struct for transforming line points.
 pub struct Octant {
-    value: u8
+    value: u8,
 }
 
 impl Octant {
     #[inline]
     /// Get the relevant octant from a start and end point.
     pub fn new<T>(start: Point<T>, end: Point<T>) -> Self
-        where T: Sub<Output = T> + Neg<Output = T> + PartialOrd + Zero
+    where
+        T: Sub<Output = T> + Neg<Output = T> + PartialOrd + Zero,
     {
         let mut value = 0;
         let mut dx = end.0 - start.0;
@@ -36,24 +37,22 @@ impl Octant {
             value += 1
         }
 
-        Self {
-            value
-        }
+        Self { value }
     }
 
     /// Convert a point to its position in the octant.
     #[inline]
     pub fn to<T: Neg<Output = T>>(&self, point: Point<T>) -> Point<T> {
         match self.value {
-            0 => ( point.0,  point.1),
-            1 => ( point.1,  point.0),
-            2 => ( point.1, -point.0),
-            3 => (-point.0,  point.1),
+            0 => (point.0, point.1),
+            1 => (point.1, point.0),
+            2 => (point.1, -point.0),
+            3 => (-point.0, point.1),
             4 => (-point.0, -point.1),
             5 => (-point.1, -point.0),
-            6 => (-point.1,  point.0),
-            7 => ( point.0, -point.1),
-            _ => unreachable!()
+            6 => (-point.1, point.0),
+            7 => (point.0, -point.1),
+            _ => unreachable!(),
         }
     }
 
@@ -61,15 +60,15 @@ impl Octant {
     #[inline]
     pub fn from<T: Neg<Output = T>>(&self, point: Point<T>) -> Point<T> {
         match self.value {
-            0 => ( point.0,  point.1),
-            1 => ( point.1,  point.0),
-            2 => (-point.1,  point.0),
-            3 => (-point.0,  point.1),
+            0 => (point.0, point.1),
+            1 => (point.1, point.0),
+            2 => (-point.1, point.0),
+            3 => (-point.0, point.1),
             4 => (-point.0, -point.1),
             5 => (-point.1, -point.0),
-            6 => ( point.1, -point.0),
-            7 => ( point.0, -point.1),
-            _ => unreachable!()
+            6 => (point.1, -point.0),
+            7 => (point.0, -point.1),
+            _ => unreachable!(),
         }
     }
 }

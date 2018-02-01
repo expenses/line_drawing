@@ -4,7 +4,7 @@ extern crate rand;
 
 use self::rand::Rng;
 use self::rand::distributions::range::SampleRange;
-use *;
+use ::*;
 
 use std::ops::Neg;
 
@@ -17,15 +17,21 @@ pub fn reverse_slice<T: Clone>(points: &[T]) -> Vec<T> {
 }
 
 fn random_point<T>(rng: &mut rand::ThreadRng, range: T) -> Point<T>
-    where T: SampleRange + PartialOrd + Neg<Output = T> + Copy {
-    
+where
+    T: SampleRange + PartialOrd + Neg<Output = T> + Copy,
+{
     (rng.gen_range(-range, range), rng.gen_range(-range, range))
 }
 
 fn random_voxel<T>(rng: &mut rand::ThreadRng, range: T) -> Voxel<T>
-    where T: SampleRange + PartialOrd + Neg<Output = T> + Copy {
-    
-    (rng.gen_range(-range, range), rng.gen_range(-range, range), rng.gen_range(-range, range))
+where
+    T: SampleRange + PartialOrd + Neg<Output = T> + Copy,
+{
+    (
+        rng.gen_range(-range, range),
+        rng.gen_range(-range, range),
+        rng.gen_range(-range, range),
+    )
 }
 
 #[test]
@@ -34,7 +40,7 @@ fn supercover_symmetrical() {
 
     let mut rng = rand::thread_rng();
 
-    for _ in 0 .. NUM_TESTS {
+    for _ in 0..NUM_TESTS {
         let start = random_point(&mut rng, RANGE);
         let end = random_point(&mut rng, RANGE);
 
@@ -51,14 +57,11 @@ fn bresenham_not_symmetrical() {
     let bresenham = |a, b| Bresenham::new(a, b).collect::<Vec<_>>();
     let mut rng = rand::thread_rng();
 
-    for _ in 0 .. NUM_TESTS {
+    for _ in 0..NUM_TESTS {
         let start = random_point(&mut rng, RANGE);
         let end = random_point(&mut rng, RANGE);
 
-        assert_eq!(
-            bresenham(start, end),
-            reverse_slice(&bresenham(end, start))
-        );
+        assert_eq!(bresenham(start, end), reverse_slice(&bresenham(end, start)));
     }
 }
 
@@ -68,7 +71,7 @@ fn bresenham_3d_not_symmetrical() {
     let bresenham_3d = |a, b| Bresenham3d::new(a, b).collect::<Vec<_>>();
     let mut rng = rand::thread_rng();
 
-    for _ in 0 .. NUM_TESTS {
+    for _ in 0..NUM_TESTS {
         let start = random_voxel(&mut rng, RANGE);
         let end = random_voxel(&mut rng, RANGE);
 
@@ -85,7 +88,7 @@ fn walk_voxels_symmetrical() {
     let walk_voxels = |a, b| WalkVoxels::<_, i16>::new(a, b).collect::<Vec<_>>();
     let mut rng = rand::thread_rng();
 
-    for _ in 0 .. NUM_TESTS {
+    for _ in 0..NUM_TESTS {
         let start = random_voxel(&mut rng, RANGE_FLOAT);
         let end = random_voxel(&mut rng, RANGE_FLOAT);
 

@@ -9,7 +9,7 @@ use {Point, SignedNum};
 ///
 /// ```
 /// extern crate line_drawing;
-/// use line_drawing::BresenhamCircle; 
+/// use line_drawing::BresenhamCircle;
 ///
 /// fn main() {
 ///     for (x, y) in BresenhamCircle::new(0, 0, 1) {
@@ -30,18 +30,20 @@ pub struct BresenhamCircle<T> {
     center_y: T,
     radius: T,
     error: T,
-    quadrant: u8
+    quadrant: u8,
 }
 
 impl<T: SignedNum> BresenhamCircle<T> {
     #[inline]
     pub fn new(center_x: T, center_y: T, radius: T) -> Self {
         Self {
-            center_x, center_y, radius,
+            center_x,
+            center_y,
+            radius,
             x: -radius,
             y: T::zero(),
             error: T::cast(2) - T::cast(2) * radius,
-            quadrant: 1
+            quadrant: 1,
         }
     }
 }
@@ -57,7 +59,7 @@ impl<T: SignedNum> Iterator for BresenhamCircle<T> {
                 2 => (self.center_x - self.y, self.center_y - self.x),
                 3 => (self.center_x + self.x, self.center_y - self.y),
                 4 => (self.center_x + self.y, self.center_y + self.x),
-                _ => unreachable!()
+                _ => unreachable!(),
             };
 
             // Update the variables after each set of quadrants

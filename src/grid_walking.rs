@@ -4,11 +4,11 @@ use steps::Steps;
 /// Walk along a grid, taking only orthogonal steps.
 ///
 /// See [this section] of the [article] for an interactive demonstration.
-/// 
+///
 /// Note that this algorithm isn't symetrical; if you swap `start` and `end`, the reversed line
 /// might not be the same.
 ///
-/// Example: 
+/// Example:
 ///
 /// ```
 /// extern crate line_drawing;
@@ -50,7 +50,7 @@ impl<T: SignedNum> WalkGrid<T> {
             sign_x: dx.signum(),
             sign_y: dy.signum(),
             nx: dx.abs().to_f32().unwrap(),
-            ny: dy.abs().to_f32().unwrap()
+            ny: dy.abs().to_f32().unwrap(),
         }
     }
 
@@ -74,7 +74,7 @@ impl<T: SignedNum> Iterator for WalkGrid<T> {
             } else {
                 self.point.1 += self.sign_y;
                 self.iy += 1.0;
-            }  
+            }
 
             Some(point)
         } else {
@@ -86,14 +86,14 @@ impl<T: SignedNum> Iterator for WalkGrid<T> {
 /// Like [`WalkGrid`] but takes diagonal steps if the line passes directly over a corner.
 ///
 /// See [this section][section] of the [article] for an interactive demonstration.
-/// 
+///
 /// This algorithm should always be symetrical.
 ///
-/// Example: 
+/// Example:
 ///
 /// ```
 /// extern crate line_drawing;
-/// use line_drawing::Supercover; 
+/// use line_drawing::Supercover;
 ///
 /// fn main() {
 ///     for (x, y) in Supercover::new((0, 0), (5, 5)) {
@@ -116,7 +116,7 @@ pub struct Supercover<T> {
     sign_x: T,
     sign_y: T,
     ny: f32,
-    nx: f32
+    nx: f32,
 }
 
 impl<T: SignedNum> Supercover<T> {
@@ -132,7 +132,7 @@ impl<T: SignedNum> Supercover<T> {
             sign_x: dx.signum(),
             sign_y: dy.signum(),
             nx: dx.abs().to_f32().unwrap(),
-            ny: dy.abs().to_f32().unwrap()
+            ny: dy.abs().to_f32().unwrap(),
         }
     }
 
@@ -199,7 +199,10 @@ fn walk_grid_tests() {
     );
 
     // by default, walk grid is asymmetrical
-    assert_ne!(walk_grid((0, 0), (2, 2)), reverse_slice(&walk_grid((2, 2), (0, 0))));
+    assert_ne!(
+        walk_grid((0, 0), (2, 2)),
+        reverse_slice(&walk_grid((2, 2), (0, 0)))
+    );
 }
 
 #[test]
@@ -214,10 +217,7 @@ fn supercover_tests() {
         [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5)]
     );
 
-    assert_eq!(
-        supercover((0, 0), (3, 1)),
-        [(0, 0), (1, 0), (2, 1), (3, 1)]
-    );
+    assert_eq!(supercover((0, 0), (3, 1)), [(0, 0), (1, 0), (2, 1), (3, 1)]);
 
     assert_eq!(
         supercover((0, 0), (0, 5)),
@@ -230,8 +230,11 @@ fn supercover_tests() {
     );
 
     assert_ne!(walk_grid((0, 0), (-10, 10)), supercover((0, 0), (-10, 10)));
-    assert_ne!(walk_grid((20, 10), (10, 20)), supercover((20, 10), (10, 20)));
+    assert_ne!(
+        walk_grid((20, 10), (10, 20)),
+        supercover((20, 10), (10, 20))
+    );
 
-    // otherwise it should do the same as walk grid    
+    // otherwise it should do the same as walk grid
     assert_eq!(supercover((0, 0), (4, 5)), walk_grid((0, 0), (4, 5)));
 }

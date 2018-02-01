@@ -1,4 +1,4 @@
-use {Voxel, SignedNum};
+use {SignedNum, Voxel};
 use steps::Steps;
 use std::cmp::max;
 
@@ -10,7 +10,7 @@ use std::cmp::max;
 ///
 /// ```
 /// extern crate line_drawing;
-/// use line_drawing::Bresenham3d; 
+/// use line_drawing::Bresenham3d;
 ///
 /// fn main() {
 ///     for (x, y, z) in Bresenham3d::new((0, 0, 0), (5, 6, 7)) {
@@ -53,7 +53,10 @@ impl<T: SignedNum> Bresenham3d<T> {
         let longest = max(len_x, max(len_y, len_z));
 
         Self {
-            len_x, len_y, len_z, longest,
+            len_x,
+            len_y,
+            len_z,
+            longest,
             count: longest,
             err_x: longest / T::cast(2),
             err_y: longest / T::cast(2),
@@ -61,7 +64,7 @@ impl<T: SignedNum> Bresenham3d<T> {
             sign_x: delta_x.signum(),
             sign_y: delta_y.signum(),
             sign_z: delta_z.signum(),
-            voxel: start
+            voxel: start,
         }
     }
 
@@ -79,16 +82,16 @@ impl<T: SignedNum> Iterator for Bresenham3d<T> {
         if self.count >= T::zero() {
             self.count -= T::one();
             self.err_x -= self.len_x;
-            self.err_y -= self.len_y; 
-            self.err_z -= self.len_z; 
+            self.err_y -= self.len_y;
+            self.err_z -= self.len_z;
 
             let voxel = self.voxel;
-            
+
             if self.err_x < T::zero() {
                 self.err_x += self.longest;
                 self.voxel.0 += self.sign_x;
             }
-            
+
             if self.err_y < T::zero() {
                 self.err_y += self.longest;
                 self.voxel.1 += self.sign_y;
@@ -110,16 +113,17 @@ impl<T: SignedNum> Iterator for Bresenham3d<T> {
 fn tests() {
     assert_eq!(
         Bresenham3d::new((0, 0, 0), (5, 5, 5)).collect::<Vec<_>>(),
-        [(0, 0, 0), (1, 1, 1), (2, 2, 2), (3, 3, 3), (4, 4, 4), (5, 5, 5)]
+        [
+            (0, 0, 0),
+            (1, 1, 1),
+            (2, 2, 2),
+            (3, 3, 3),
+            (4, 4, 4),
+            (5, 5, 5)
+        ]
     );
 
-    assert_eq!(
-        Bresenham3d::new((0, 0, 0), (500, 678, 1000)).count(),
-        1001
-    );
+    assert_eq!(Bresenham3d::new((0, 0, 0), (500, 678, 1000)).count(), 1001);
 
-    assert_eq!(
-        Bresenham3d::new((500, 678, 1000), (0, 0, 0)).count(),
-        1001
-    );
+    assert_eq!(Bresenham3d::new((500, 678, 1000), (0, 0, 0)).count(), 1001);
 }

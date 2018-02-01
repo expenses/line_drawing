@@ -1,4 +1,4 @@
-use {Point, FloatNum, SignedNum};
+use {FloatNum, Point, SignedNum};
 use octant::Octant;
 use steps::Steps;
 
@@ -10,15 +10,15 @@ use steps::Steps;
 ///
 /// ```
 /// extern crate line_drawing;
-/// use line_drawing::Midpoint; 
-/// 
+/// use line_drawing::Midpoint;
+///
 /// fn main() {
 ///     for (x, y) in Midpoint::<f32, i8>::new((0.2, 0.02), (2.8, 7.7)) {
 ///         print!("({}, {}), ", x, y);
 ///     }
 /// }
 /// ```
-/// 
+///
 /// ```text
 /// (0, 0), (1, 1), (1, 2), (1, 3), (2, 4), (2, 5), (2, 6), (3, 7), (3, 8),
 /// ```
@@ -31,7 +31,7 @@ pub struct Midpoint<I, O> {
     a: I,
     b: I,
     k: I,
-    end_x: O
+    end_x: O,
 }
 
 impl<I: FloatNum, O: SignedNum> Midpoint<I, O> {
@@ -51,17 +51,19 @@ impl<I: FloatNum, O: SignedNum> Midpoint<I, O> {
         let c = start.0 * end.1 - end.0 * start.1;
 
         Self {
-            octant, a, b,
+            octant,
+            a,
+            b,
             point: (O::cast(start.0.round()), O::cast(start.1.round())),
             k: a * (start.0.round() + I::one()) + b * (start.1.round() + I::cast(0.5)) + c,
-            end_x: O::cast(end.0.round())
+            end_x: O::cast(end.0.round()),
         }
     }
 
     #[inline]
     pub fn steps(self) -> Steps<Point<O>, Self> {
         Steps::new(self)
-    }    
+    }
 }
 
 impl<I: FloatNum, O: SignedNum> Iterator for Midpoint<I, O> {

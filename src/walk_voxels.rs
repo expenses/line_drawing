@@ -1,9 +1,15 @@
-use {Voxel, FloatNum, SignedNum};
+use {FloatNum, SignedNum, Voxel};
 use steps::Steps;
 
 #[inline]
 fn compare<T: SignedNum>(a: T, b: T) -> T {
-    if a > b { T::one() } else if a == b { T::zero() } else { -T::one() }
+    if a > b {
+        T::one()
+    } else if a == b {
+        T::zero()
+    } else {
+        -T::one()
+    }
 }
 
 #[inline]
@@ -20,7 +26,7 @@ fn round<I: FloatNum, O: SignedNum>(voxel: Voxel<I>) -> Voxel<O> {
 ///
 /// ```
 /// extern crate line_drawing;
-/// use line_drawing::WalkVoxels; 
+/// use line_drawing::WalkVoxels;
 ///
 /// fn main() {
 ///     for (i, (x, y, z)) in WalkVoxels::<f32, i8>::new((0.0, 0.0, 0.0), (5.0, 6.0, 7.0)).enumerate() {
@@ -36,7 +42,7 @@ fn round<I: FloatNum, O: SignedNum>(voxel: Voxel<I>) -> Voxel<O> {
 /// (0, 0, 0), (0, 0, 1), (0, 1, 1), (1, 1, 1), (1, 1, 2),
 /// (1, 2, 2), (2, 2, 2), (2, 2, 3), (2, 3, 3), (2, 3, 4),
 /// (3, 3, 4), (3, 4, 4), (3, 4, 5), (4, 4, 5), (4, 5, 5),
-/// (4, 5, 6), (4, 5, 7), (4, 6, 7), (5, 6, 7), 
+/// (4, 5, 6), (4, 5, 7), (4, 6, 7), (5, 6, 7),
 /// ```
 ///
 /// [this Stack Overflow answer]: https://stackoverflow.com/a/16507714
@@ -51,7 +57,7 @@ pub struct WalkVoxels<I, O> {
     err_z: I,
     d_err_x: I,
     d_err_y: I,
-    d_err_z: I
+    d_err_z: I,
 }
 
 impl<I: FloatNum, O: SignedNum> WalkVoxels<I, O> {
@@ -60,23 +66,46 @@ impl<I: FloatNum, O: SignedNum> WalkVoxels<I, O> {
         let start_i: Voxel<O> = round(start);
         let end_i: Voxel<O> = round(end);
 
-        let count = (start_i.0 - end_i.0).abs() +
-                    (start_i.1 - end_i.1).abs() +
-                    (start_i.2 - end_i.2).abs();
+        let count =
+            (start_i.0 - end_i.0).abs() + (start_i.1 - end_i.1).abs() + (start_i.2 - end_i.2).abs();
 
         let sign_x = compare(end_i.0, start_i.0);
         let sign_y = compare(end_i.1, start_i.1);
         let sign_z = compare(end_i.2, start_i.2);
 
         // Planes for each axis that we will next cross
-        let x_plane = start_i.0 + (if end_i.0 > start_i.0 {O::one()} else {O::zero()});
-        let y_plane = start_i.1 + (if end_i.1 > start_i.1 {O::one()} else {O::zero()});
-        let z_plane = start_i.2 + (if end_i.2 > start_i.2 {O::one()} else {O::zero()});
+        let x_plane = start_i.0 + (if end_i.0 > start_i.0 {
+            O::one()
+        } else {
+            O::zero()
+        });
+        let y_plane = start_i.1 + (if end_i.1 > start_i.1 {
+            O::one()
+        } else {
+            O::zero()
+        });
+        let z_plane = start_i.2 + (if end_i.2 > start_i.2 {
+            O::one()
+        } else {
+            O::zero()
+        });
 
         // Only used for multiplying up the error margins
-        let vx = if start.0 == end.0 {I::one()} else {end.0 - start.0};
-        let vy = if start.1 == end.1 {I::one()} else {end.1 - start.1};
-        let vz = if start.2 == end.2 {I::one()} else {end.2 - start.2};
+        let vx = if start.0 == end.0 {
+            I::one()
+        } else {
+            end.0 - start.0
+        };
+        let vy = if start.1 == end.1 {
+            I::one()
+        } else {
+            end.1 - start.1
+        };
+        let vz = if start.2 == end.2 {
+            I::one()
+        } else {
+            end.2 - start.2
+        };
 
         // Error is normalized to vx * vy * vz so we only have to multiply up
         let vxvy = vx * vy;
@@ -84,7 +113,10 @@ impl<I: FloatNum, O: SignedNum> WalkVoxels<I, O> {
         let vyvz = vy * vz;
 
         Self {
-            sign_x, sign_y, sign_z, count,
+            sign_x,
+            sign_y,
+            sign_z,
+            count,
             voxel: start_i,
             // Error from the next plane accumulators, scaled up by vx * vy * vz
             // gx0 + vx * rx === gxp
@@ -95,7 +127,7 @@ impl<I: FloatNum, O: SignedNum> WalkVoxels<I, O> {
             err_z: (I::cast(z_plane) - start.2) * vxvy,
             d_err_x: I::cast(sign_x) * vyvz,
             d_err_y: I::cast(sign_y) * vxvz,
-            d_err_z: I::cast(sign_z) * vxvy
+            d_err_z: I::cast(sign_z) * vxvy,
         }
     }
 
@@ -112,7 +144,7 @@ impl<I: FloatNum, O: SignedNum> Iterator for WalkVoxels<I, O> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.count >= O::zero() {
             self.count -= O::one();
-            
+
             // Which plane do we cross first?
             let xr = self.err_x.abs();
             let yr = self.err_y.abs();
@@ -127,12 +159,10 @@ impl<I: FloatNum, O: SignedNum> Iterator for WalkVoxels<I, O> {
             if !x_zero && (y_zero || xr < yr) && (z_zero || xr < zr) {
                 self.voxel.0 += self.sign_x;
                 self.err_x += self.d_err_x;
-            }
-            else if !y_zero && (z_zero || yr < zr) {
+            } else if !y_zero && (z_zero || yr < zr) {
                 self.voxel.1 += self.sign_y;
                 self.err_y += self.d_err_y;
-            }
-            else if !z_zero {
+            } else if !z_zero {
                 self.voxel.2 += self.sign_z;
                 self.err_z += self.d_err_z;
             }
@@ -147,10 +177,7 @@ impl<I: FloatNum, O: SignedNum> Iterator for WalkVoxels<I, O> {
 #[test]
 fn tests() {
     assert_eq!(
-        WalkVoxels::new(
-            (0.472, -1.100, 0.179),
-            (1.114, -0.391, 0.927)
-        ).collect::<Vec<_>>(),
+        WalkVoxels::new((0.472, -1.100, 0.179), (1.114, -0.391, 0.927)).collect::<Vec<_>>(),
         [(0, -1, 0), (1, -1, 0), (1, -1, 1), (1, 0, 1)]
     );
 }
