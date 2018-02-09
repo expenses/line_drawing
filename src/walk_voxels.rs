@@ -12,9 +12,10 @@ fn compare<T: SignedNum>(a: T, b: T) -> T {
     }
 }
 
-/// Where the center of the voxel is, at the center or a corner.
-///
-/// Generally you want `Center`.
+/// Whether the center or corner of a voxel is aligned with the "grid".
+/// 
+/// If the origin point of your world is at the corner of 8 voxels, use Corner. This is likely the case if you're using `[gfx_voxel]`.
+/// [gfx_voxel]: https://crates.io/crates/piston3d-gfx_voxel
 pub enum VoxelOrigin {
     Corner,
     Center,
