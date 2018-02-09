@@ -25,7 +25,7 @@ impl VoxelOrigin {
     /// Round a voxel's position based on the origin.
     pub fn round<I: FloatNum, O: SignedNum>(&self, voxel: Voxel<I>) -> Voxel<O> {
         let (x, y, z) = match *self {
-            VoxelOrigin::Corner => voxel,
+            VoxelOrigin::Corner => (voxel.0.floor(), voxel.1.floor(), voxel.2.floor()),
             VoxelOrigin::Center => (voxel.0.round(), voxel.1.round(), voxel.2.round()),
         };
 
