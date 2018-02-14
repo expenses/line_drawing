@@ -12,9 +12,23 @@ fn compare<T: SignedNum>(a: T, b: T) -> T {
     }
 }
 
-/// Where the center of the voxel is, at the center or a corner.
-///
-/// Generally you want `Center`.
+/// Whether the center or corner of a voxel is aligned with the "grid".
+/// 
+/// If the origin point of your world is at the corner of 8 voxels, use Corner. This is likely the case if you're using `[gfx_voxel]`.
+/// [gfx_voxel]: https://crates.io/crates/piston3d-gfx_voxel
+/// 
+/// ```
+/// use line_drawing::{VoxelOrigin, WalkVoxels};
+/// 
+/// let a = (-0.1, -0.1, -0.1);
+/// let b = (0.1, 0.1, 0.1);
+/// 
+/// let center_length = WalkVoxels::<f32, i8>::new(a, b, &VoxelOrigin::Center).count();
+/// assert_eq!(center_length, 1);
+/// 
+/// let corner_length = WalkVoxels::<f32, i8>::new(a, b, &VoxelOrigin::Corner).count();
+/// assert_eq!(corner_length, 4);
+/// ```
 pub enum VoxelOrigin {
     Corner,
     Center,
@@ -25,7 +39,7 @@ impl VoxelOrigin {
     /// Round a voxel's position based on the origin.
     pub fn round<I: FloatNum, O: SignedNum>(&self, voxel: Voxel<I>) -> Voxel<O> {
         let (x, y, z) = match *self {
-            VoxelOrigin::Corner => voxel,
+            VoxelOrigin::Corner => (voxel.0.floor(), voxel.1.floor(), voxel.2.floor()),
             VoxelOrigin::Center => (voxel.0.round(), voxel.1.round(), voxel.2.round()),
         };
 
