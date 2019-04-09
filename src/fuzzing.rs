@@ -3,7 +3,7 @@
 extern crate rand;
 
 use self::rand::Rng;
-use self::rand::distributions::range::SampleRange;
+use self::rand::distributions::uniform::SampleUniform;
 use ::*;
 
 use std::ops::Neg;
@@ -16,16 +16,16 @@ pub fn reverse_slice<T: Clone>(points: &[T]) -> Vec<T> {
     points.iter().rev().cloned().collect()
 }
 
-fn random_point<T>(rng: &mut rand::ThreadRng, range: T) -> Point<T>
+fn random_point<T>(rng: &mut rand::rngs::ThreadRng, range: T) -> Point<T>
 where
-    T: SampleRange + PartialOrd + Neg<Output = T> + Copy,
+    T: SampleUniform + PartialOrd + Neg<Output = T> + Copy,
 {
     (rng.gen_range(-range, range), rng.gen_range(-range, range))
 }
 
-fn random_voxel<T>(rng: &mut rand::ThreadRng, range: T) -> Voxel<T>
+fn random_voxel<T>(rng: &mut rand::rngs::ThreadRng, range: T) -> Voxel<T>
 where
-    T: SampleRange + PartialOrd + Neg<Output = T> + Copy,
+    T: SampleUniform + PartialOrd + Neg<Output = T> + Copy,
 {
     (
         rng.gen_range(-range, range),
