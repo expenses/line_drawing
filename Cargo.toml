@@ -17,4 +17,4 @@ num-traits = "0.1.40"
 [dev-dependencies]
 bresenham = "0.1.1"
 image = "0.17.0"
-rand = "0.3.17"
+rand = "0.6"
