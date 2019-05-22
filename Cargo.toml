@@ -17,4 +17,4 @@ num-traits = "0"
 [dev-dependencies]
 bresenham = "0"
 image = "0"
-rand = "0"
+rand = "0.6"
