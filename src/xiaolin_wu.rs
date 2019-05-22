@@ -50,11 +50,12 @@ impl<I: FloatNum, O: SignedNum> XiaolinWu<I, O> {
             swap(&mut start, &mut end);
         }
 
-        let mut gradient = (end.1 - start.1) / (end.0 - start.0);
-
-        if gradient == I::zero() {
-            gradient = I::one();
-        }
+        let dx = end.0 - start.0;
+        let gradient = if dx.is_zero() {
+            I::one()
+        } else {
+            (end.1 - start.1) / dx
+        };
 
         Self {
             steep,
@@ -132,6 +133,28 @@ fn tests() {
             ((5, 2), 0.5),
             ((5, 3), 0.5),
             ((6, 3), 1.0)
+        ]
+    );
+
+    assert_eq!(
+        xiaolin_wu((4.0, 2.0), (4.0, 6.0)),
+        [
+            ((4, 2), 1.0),
+            ((4, 3), 1.0),
+            ((4, 4), 1.0),
+            ((4, 5), 1.0),
+            ((4, 6), 1.0),
+        ]
+    );
+
+    assert_eq!(
+        xiaolin_wu((2.0, 4.0), (6.0, 4.0)),
+        [
+            ((2, 4), 1.0),
+            ((3, 4), 1.0),
+            ((4, 4), 1.0),
+            ((5, 4), 1.0),
+            ((6, 4), 1.0),
         ]
     );
 
