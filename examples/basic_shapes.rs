@@ -1,6 +1,5 @@
 //! An example of generating basic shapes
 extern crate image;
-extern crate num_complex;
 extern crate line_drawing;
 
 fn draw_circle(imgbuf: &mut image::RgbaImage, xc: i32, yc: i32, r: i32) {
