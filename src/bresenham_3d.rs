@@ -1,6 +1,6 @@
 use {SignedNum, Voxel};
 use steps::Steps;
-use std::cmp::max;
+use core::cmp::max;
 
 /// An 3-D implementation of bresenham, sourced from [this site].
 ///

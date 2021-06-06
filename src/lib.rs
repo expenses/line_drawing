@@ -23,6 +23,11 @@
 //! [Xiaolin Wu's line algorithm]: https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm
 //! [`WalkVoxels`]: struct.WalkVoxels.html
 
+#![cfg_attr(not(test), no_std)]
+
+#[cfg(test)]
+use std as core;
+
 extern crate num_traits;
 
 pub mod steps;

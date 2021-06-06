@@ -20,7 +20,7 @@ fn random_point<T>(rng: &mut rand::rngs::ThreadRng, range: T) -> Point<T>
 where
     T: SampleUniform + PartialOrd + Neg<Output = T> + Copy,
 {
-    (rng.gen_range(-range, range), rng.gen_range(-range, range))
+    (rng.gen_range(-range..range), rng.gen_range(-range..range))
 }
 
 fn random_voxel<T>(rng: &mut rand::rngs::ThreadRng, range: T) -> Voxel<T>
@@ -28,9 +28,9 @@ where
     T: SampleUniform + PartialOrd + Neg<Output = T> + Copy,
 {
     (
-        rng.gen_range(-range, range),
-        rng.gen_range(-range, range),
-        rng.gen_range(-range, range),
+        rng.gen_range(-range..range),
+        rng.gen_range(-range..range),
+        rng.gen_range(-range..range),
     )
 }
 

@@ -1,7 +1,7 @@
 //! A simple octant struct for transforming line points.
 
 use Point;
-use std::ops::{Neg, Sub};
+use core::ops::{Neg, Sub};
 use num_traits::Zero;
 
 /// A simple octant struct for transforming line points.
