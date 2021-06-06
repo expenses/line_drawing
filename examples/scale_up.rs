@@ -36,5 +36,5 @@ fn main() {
 
     draw_line(&mut image, Bresenham::new(a, b), GREY);
 
-    image.to_rgb().save("test.png").unwrap();
+    image.to_rgb8().save("test.png").unwrap();
 }

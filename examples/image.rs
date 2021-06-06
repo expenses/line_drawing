@@ -28,7 +28,7 @@ fn draw_xiaolin_wu(image: &mut Image, line: XiaolinWu<f32, i32>) {
 }
 
 fn main() {
-    let mut image = DynamicImage::new_rgb8(300, 300).to_rgb();
+    let mut image = DynamicImage::new_rgb8(300, 300).to_rgb8();
 
     // Draw each of the different line types
     draw_line(&mut image, WalkGrid::new((10, 230), (50, 290)), [255, 0, 0]);
