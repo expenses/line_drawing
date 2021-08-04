@@ -62,7 +62,7 @@ impl<T: Copy, I: Iterator<Item = T>> Iterator for Steps<T, I> {
 
 #[test]
 fn steps() {
-    use Midpoint;
+    use crate::Midpoint;
 
     assert_eq!(
         Midpoint::new((0.0, 0.0), (3.0, 4.0))

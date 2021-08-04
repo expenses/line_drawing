@@ -1,5 +1,5 @@
-use {SignedNum, Voxel};
-use steps::Steps;
+use crate::steps::Steps;
+use crate::{SignedNum, Voxel};
 use core::cmp::max;
 
 /// An 3-D implementation of bresenham, sourced from [this site].

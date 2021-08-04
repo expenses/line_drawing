@@ -23,32 +23,35 @@
 //! [Xiaolin Wu's line algorithm]: https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm
 //! [`WalkVoxels`]: struct.WalkVoxels.html
 
+#![deny(
+    rust_2018_compatibility,
+    rust_2018_idioms,
+    future_incompatible,
+    nonstandard_style,
+    unused,
+    unused_extern_crates
+)]
 #![cfg_attr(not(test), no_std)]
 
-#[cfg(test)]
-use std as core;
-
-extern crate num_traits;
-
-pub mod steps;
 pub mod octant;
+pub mod steps;
 
 mod bresenham;
-mod midpoint;
-mod xiaolin_wu;
-mod grid_walking;
-mod fuzzing;
 mod bresenham_3d;
-mod walk_voxels;
 mod bresenham_circle;
+mod fuzzing;
+mod grid_walking;
+mod midpoint;
+mod walk_voxels;
+mod xiaolin_wu;
 
-pub use bresenham::*;
-pub use midpoint::*;
-pub use xiaolin_wu::*;
-pub use grid_walking::*;
-pub use bresenham_3d::*;
-pub use walk_voxels::*;
-pub use bresenham_circle::*;
+pub use crate::bresenham::*;
+pub use crate::bresenham_3d::*;
+pub use crate::bresenham_circle::*;
+pub use crate::grid_walking::*;
+pub use crate::midpoint::*;
+pub use crate::walk_voxels::*;
+pub use crate::xiaolin_wu::*;
 
 use num_traits::{Float, NumAssignOps, NumCast, Signed};
 

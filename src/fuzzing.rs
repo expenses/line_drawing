@@ -1,12 +1,13 @@
 #![cfg(test)]
 
-extern crate rand;
+use rand;
 
-use self::rand::Rng;
 use self::rand::distributions::uniform::SampleUniform;
-use ::*;
+use self::rand::Rng;
 
+use crate::{Bresenham, Bresenham3d, Point, Supercover, Voxel, WalkVoxels};
 use std::ops::Neg;
+use std::vec::Vec;
 
 const NUM_TESTS: u16 = 10000;
 const RANGE: isize = 500;
@@ -85,7 +86,7 @@ fn bresenham_3d_not_symmetrical() {
 #[test]
 #[should_panic]
 fn walk_voxels_symmetrical() {
-    use VoxelOrigin::Center;
+    use crate::VoxelOrigin::Center;
 
     let walk_voxels = |a, b| WalkVoxels::<_, i16>::new(a, b, &Center).collect::<Vec<_>>();
     let mut rng = rand::thread_rng();

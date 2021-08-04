@@ -1,8 +1,8 @@
 extern crate image;
 extern crate line_drawing;
 
-use line_drawing::*;
 use image::{DynamicImage, ImageBuffer, Rgb};
+use line_drawing::*;
 
 type Image = ImageBuffer<Rgb<u8>, Vec<u8>>;
 

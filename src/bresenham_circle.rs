@@ -1,4 +1,4 @@
-use {Point, SignedNum};
+use crate::{Point, SignedNum};
 
 /// An implementation of [Bresenham's circle algorithm].
 ///

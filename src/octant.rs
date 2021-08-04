@@ -1,6 +1,6 @@
 //! A simple octant struct for transforming line points.
 
-use Point;
+use crate::Point;
 use core::ops::{Neg, Sub};
 use num_traits::Zero;
 

@@ -1,5 +1,5 @@
-use {FloatNum, Point, SignedNum};
-use steps::Steps;
+use crate::steps::Steps;
+use crate::{FloatNum, Point, SignedNum};
 use core::mem::swap;
 
 /// An implementation of [Xiaolin Wu's line algorithm].

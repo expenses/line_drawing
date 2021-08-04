@@ -1,5 +1,5 @@
-use {Point, SignedNum};
-use steps::Steps;
+use crate::steps::Steps;
+use crate::{Point, SignedNum};
 
 /// Walk along a grid, taking only orthogonal steps.
 ///
@@ -175,7 +175,7 @@ impl<T: SignedNum> Iterator for Supercover<T> {
 
 #[test]
 fn walk_grid_tests() {
-    use fuzzing::reverse_slice;
+    use crate::fuzzing::reverse_slice;
     let walk_grid = |a, b| WalkGrid::new(a, b).collect::<Vec<_>>();
 
     assert_eq!(

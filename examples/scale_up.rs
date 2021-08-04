@@ -1,8 +1,8 @@
 extern crate image;
 extern crate line_drawing;
 
+use image::{imageops::FilterType, DynamicImage, GenericImage, Rgba};
 use line_drawing::*;
-use image::{DynamicImage, GenericImage, imageops::FilterType, Rgba};
 
 const BLACK: [u8; 4] = [255, 255, 255, 255];
 const GREY: [u8; 4] = [128, 128, 128, 255];

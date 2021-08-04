@@ -1,5 +1,5 @@
-use {FloatNum, SignedNum, Voxel};
-use steps::Steps;
+use crate::steps::Steps;
+use crate::{FloatNum, SignedNum, Voxel};
 
 #[inline]
 fn compare<T: SignedNum>(a: T, b: T) -> T {
@@ -13,19 +13,19 @@ fn compare<T: SignedNum>(a: T, b: T) -> T {
 }
 
 /// Whether the center or corner of a voxel is aligned with the "grid".
-/// 
+///
 /// If the origin point of your world is at the corner of 8 voxels, use Corner. This is likely the case if you're using `[gfx_voxel]`.
 /// [gfx_voxel]: https://crates.io/crates/piston3d-gfx_voxel
-/// 
+///
 /// ```
 /// use line_drawing::{VoxelOrigin, WalkVoxels};
-/// 
+///
 /// let a = (-0.1, -0.1, -0.1);
 /// let b = (0.1, 0.1, 0.1);
-/// 
+///
 /// let center_length = WalkVoxels::<f32, i8>::new(a, b, &VoxelOrigin::Center).count();
 /// assert_eq!(center_length, 1);
-/// 
+///
 /// let corner_length = WalkVoxels::<f32, i8>::new(a, b, &VoxelOrigin::Corner).count();
 /// assert_eq!(corner_length, 4);
 /// ```
@@ -57,7 +57,7 @@ impl VoxelOrigin {
 /// ```
 /// extern crate line_drawing;
 /// use line_drawing::{VoxelOrigin, WalkVoxels};
-/// 
+///
 /// fn main() {
 ///     let a = (0.0, 0.0, 0.0);
 ///     let b = (5.0, 6.0, 7.0);
@@ -108,21 +108,24 @@ impl<I: FloatNum, O: SignedNum> WalkVoxels<I, O> {
         let sign_z = compare(end_i.2, start_i.2);
 
         // Planes for each axis that we will next cross
-        let x_plane = start_i.0 + (if end_i.0 > start_i.0 {
-            O::one()
-        } else {
-            O::zero()
-        });
-        let y_plane = start_i.1 + (if end_i.1 > start_i.1 {
-            O::one()
-        } else {
-            O::zero()
-        });
-        let z_plane = start_i.2 + (if end_i.2 > start_i.2 {
-            O::one()
-        } else {
-            O::zero()
-        });
+        let x_plane = start_i.0
+            + (if end_i.0 > start_i.0 {
+                O::one()
+            } else {
+                O::zero()
+            });
+        let y_plane = start_i.1
+            + (if end_i.1 > start_i.1 {
+                O::one()
+            } else {
+                O::zero()
+            });
+        let z_plane = start_i.2
+            + (if end_i.2 > start_i.2 {
+                O::one()
+            } else {
+                O::zero()
+            });
 
         // Only used for multiplying up the error margins
         let vx = if start.0 == end.0 {
@@ -215,7 +218,8 @@ fn tests() {
             (0.472, -1.100, 0.179),
             (1.114, -0.391, 0.927),
             &VoxelOrigin::Center
-        ).collect::<Vec<_>>(),
+        )
+        .collect::<Vec<_>>(),
         [(0, -1, 0), (1, -1, 0), (1, -1, 1), (1, 0, 1)]
     );
 }

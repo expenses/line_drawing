@@ -1,6 +1,6 @@
-use {Point, SignedNum};
-use octant::Octant;
-use steps::Steps;
+use crate::octant::Octant;
+use crate::steps::Steps;
+use crate::{Point, SignedNum};
 
 /// An implementation of [Bresenham's line algorithm].
 ///
