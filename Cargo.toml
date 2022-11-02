@@ -12,7 +12,7 @@ readme = "README.md"
 
 
 [dependencies]
-num-traits = "0.2"
+num-traits = { version = "0.2", default-features = false }
 
 [dev-dependencies]
 bresenham = "0.1.1"
