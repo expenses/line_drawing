@@ -5,6 +5,7 @@
 //! * [`Bresenham`] - An implementation of [Bresenham's line algorithm].
 //! * [`Bresenham3d`] - A 3-Dimensional implementation of bresenham.
 //! * [`BresenhamCircle`] - Bresenham's circle algorithm.
+//! * [`BresenhamEllipse`] - Bresenham's ellipse algorithm.
 //! * [`Midpoint`] - The [mid-point line algorithm].
 //! * [`WalkGrid`] and [`Supercover`] - implemented from [this article by Red Blob Games][article].
 //! * [`WalkVoxels`] - A similar 3-Dimensional algorithm that only takes orthogonal steps.
@@ -14,6 +15,7 @@
 //! [Bresenham's line algorithm]: https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
 //! [`Bresenham3d`]: struct.Bresenham3d.html
 //! [`BresenhamCircle`]: struct.BresenhamCircle.html
+//! [`BresenhamEllipse`]: struct.BresenhamEllipse.html
 //! [`Midpoint`]: struct.Midpoint.html
 //! [mid-point line algorithm]: http://www.mat.univie.ac.at/~kriegl/Skripten/CG/node25.html
 //! [`WalkGrid`]: struct.WalkGrid.html
@@ -41,6 +43,7 @@ mod fuzzing;
 mod bresenham_3d;
 mod walk_voxels;
 mod bresenham_circle;
+mod bresenham_ellipse;
 
 pub use bresenham::*;
 pub use midpoint::*;
@@ -49,6 +52,7 @@ pub use grid_walking::*;
 pub use bresenham_3d::*;
 pub use walk_voxels::*;
 pub use bresenham_circle::*;
+pub use bresenham_ellipse::*;
 
 use num_traits::{Float, NumAssignOps, NumCast, Signed};
 
